@@ -10,6 +10,7 @@ import { createPool, createReadOnlyPool } from '../src/db.js';
 import { PROMPT_VERSION } from '../src/agent/recorder.js';
 import { describeError } from '../src/util/log-error.js';
 import { runEval } from './runner.js';
+import { checkDbName } from '../scripts/db-guard.js';
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -17,8 +18,9 @@ const arg = (name, fallback) => {
 };
 const baseUrl = arg('base-url');
 const repeatHigh = Number(arg('repeat-high', '3'));
-if (!baseUrl || !/^https?:\/\//.test(baseUrl) || !Number.isInteger(repeatHigh) || repeatHigh < 1 || repeatHigh > 10) {
-  console.error('usage: npm run eval -- --base-url <http://host:port> [--repeat-high 3] [--label <text>]');
+const delayMs = Number(arg('delay-ms', '0'));
+if (!baseUrl || !/^https?:\/\//.test(baseUrl) || !Number.isInteger(repeatHigh) || repeatHigh < 1 || repeatHigh > 10 || !Number.isInteger(delayMs) || delayMs < 0 || delayMs > 600000) {
+  console.error('usage: npm run eval -- --base-url <http://host:port> [--repeat-high 3] [--delay-ms 0] [--label <text>]');
   process.exit(1);
 }
 
@@ -38,7 +40,7 @@ const client = {
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      return { status: r.status, body: await r.json().catch(() => null) };
+      return { status: r.status, headers: { 'retry-after': r.headers.get('retry-after') }, body: await r.json().catch(() => null) };
     };
     return {
       newConversation: async () => (await call('POST', '/api/conversations', {})).body.conversation.id,
@@ -47,7 +49,9 @@ const client = {
   },
 };
 
-const config = loadConfig(process.env);
+// Never needs production mode, so never needs the deploy secrets. Guard: only disposable DBs.
+const config = loadConfig({ ...process.env, NODE_ENV: 'development' });
+checkDbName(config.databaseUrl, undefined, { action: 'use', bypass: false });
 const db = createPool(config.databaseUrl);
 const readDb = createReadOnlyPool(config.databaseUrl);
 try {
@@ -61,6 +65,7 @@ try {
     promptVersion: PROMPT_VERSION,
     label: arg('label', null),
     repeatHigh,
+    delayMs,
     log: (line) => console.log(line),
   });
   if (result.status === 'BLOCKED') {

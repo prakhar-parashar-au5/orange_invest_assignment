@@ -17,6 +17,27 @@ import {
   noDataGate,
 } from './gates.js';
 
+const realSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const MAX_RATE_LIMIT_RETRIES = 5;
+
+/**
+ * Wraps send(conversationId, text): on 429 RATE_LIMITED, waits Retry-After seconds (default 30) and
+ * tries again, up to 5 times. Production allows 20 messages per 10 minutes per user, and the corpus
+ * sends more than that.
+ */
+export function sendWithRetry(send, { sleep = realSleep, log = () => {} } = {}) {
+  return async (conversationId, text) => {
+    let res = await send(conversationId, text);
+    for (let retry = 1; res.status === 429 && retry <= MAX_RATE_LIMIT_RETRIES; retry += 1) {
+      const seconds = Math.max(1, Number(res.headers?.['retry-after']) || 30);
+      log(`rate limited; waiting ${seconds} s (retry ${retry}/${MAX_RATE_LIMIT_RETRIES})`);
+      await sleep(seconds * 1000);
+      res = await send(conversationId, text);
+    }
+    return res;
+  };
+}
+
 async function traceFacts(readDb, assistantMessageId) {
   if (!assistantMessageId) return { trace: null, toolCalls: [], modelCalls: 0 };
   const [[trace]] = await readDb.query('SELECT id, status FROM ai_traces WHERE assistant_message_id = ?', [assistantMessageId]);
@@ -43,7 +64,20 @@ function gradeAnswer(expect, answer, facts, own, otherUnique) {
 /**
  * @returns {Promise<{ runId: number, status: 'FINISHED'|'BLOCKED', cases: object[] }>}
  */
-export async function runEval({ corpus, client, db, readDb, model, promptVersion, label = null, repeatHigh = 3, now = moment(), log = () => {} }) {
+export async function runEval({
+  corpus,
+  client,
+  db,
+  readDb,
+  model,
+  promptVersion,
+  label = null,
+  repeatHigh = 3,
+  delayMs = 0,
+  sleep = realSleep,
+  now = moment(),
+  log = () => {},
+}) {
   const [run] = await db.query("INSERT INTO eval_runs (label, model, prompt_version, status) VALUES (?, ?, ?, 'RUNNING')", [
     label,
     model,
@@ -78,8 +112,10 @@ export async function runEval({ corpus, client, db, readDb, model, promptVersion
       const conversationId = await s.newConversation();
       const started = Date.now();
       let res;
+      const send = sendWithRetry(s.send, { sleep, log });
       for (const turn of c.turns) {
-        res = await s.send(conversationId, turn);
+        if (delayMs > 0) await sleep(delayMs);
+        res = await send(conversationId, turn);
         if (res.status !== 201) break;
       }
       const latency = Date.now() - started;

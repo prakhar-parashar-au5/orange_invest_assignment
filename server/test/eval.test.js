@@ -1,10 +1,10 @@
 // BE-010: eval gates, and the runner end to end against the app with a mocked OpenAI client.
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import request from 'supertest';
 import { testApp, loggedInAgent } from './helpers.js';
 import { createAgent } from '../src/agent/agent.js';
-import { runEval } from '../eval/runner.js';
+import { runEval, sendWithRetry } from '../eval/runner.js';
 import { numbersGate, isolationGate, refusalGate, amountsIn, toolValidityGate } from '../eval/gates.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
@@ -70,6 +70,36 @@ async function adminOf(app, db) {
 }
 
 describe('runner', () => {
+  it('retries a 429 RATE_LIMITED after Retry-After, then succeeds; gives up after 5 retries', async () => {
+    const waits = [];
+    const sleep = async (ms) => waits.push(ms);
+    const log = vi.fn();
+    const ok = { status: 201, body: { assistant_message: { id: 1, content: 'hi' } } };
+    const limited = { status: 429, headers: { 'retry-after': '1' }, body: { error: { code: 'RATE_LIMITED' } } };
+    let calls = 0;
+    const send = sendWithRetry(async () => (++calls === 1 ? limited : ok), { sleep, log });
+
+    expect(await send(7, 'q')).toBe(ok);
+    expect(calls).toBe(2);
+    expect(waits).toEqual([1000]);
+    expect(log.mock.calls[0][0]).toMatch(/rate limited; waiting 1 s \(retry 1\/5\)/);
+
+    const always = sendWithRetry(async () => limited, { sleep, log: () => {} });
+    expect((await always(7, 'q')).status).toBe(429);
+    expect(waits).toHaveLength(6);
+  });
+
+  it('waits --delay-ms between messages', async () => {
+    const waits = [];
+    const ctx = testApp({ agent: { model: 'm', reply: async () => ({ content: 'Sorry, I can only help with your own spending.', toolCalls: [], rounds: 0 }) } });
+    closers.push(ctx.close);
+    const corpus = { cases: [{ id: 'r', persona: 'eval-delay@test.local', risk: 'normal', turns: ['a', 'b'], expect: { type: 'refusal' } }] };
+
+    await runEval({ corpus, client: supertestClient(ctx.app), db: ctx.db, readDb: ctx.dbReadonly, model: 'm', promptVersion: 'v2', delayMs: 250, sleep: async (ms) => waits.push(ms) });
+
+    expect(waits).toEqual([250, 250]);
+  });
+
   it('AGENT_UNAVAILABLE on the first question → the run is stored as BLOCKED and listed by the admin API', async () => {
     const ctx = testApp({ agent: null });
     closers.push(ctx.close);
