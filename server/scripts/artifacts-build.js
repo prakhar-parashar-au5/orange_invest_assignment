@@ -40,7 +40,8 @@ async function inject(file, marker, body) {
   const md = await readFile(p, 'utf8');
   const re = new RegExp(`(<!-- generated:${marker} -->)[\\s\\S]*?(<!-- /generated:${marker} -->)`);
   if (!re.test(md)) throw new Error(`marker ${marker} missing in ${file}`);
-  await writeFile(p, md.replace(re, `$1\n${body.trim()}\n$2`));
+  // A function replacement, so $ sequences in the generated text are never interpreted.
+  await writeFile(p, md.replace(re, (_m, open, close) => `${open}\n${body.trim()}\n${close}`));
 }
 
 // ---------- 1. schema ----------
