@@ -6,7 +6,7 @@
 - **What:** a chat assistant over your own bank statement. Upload a CSV, see the transactions, ask questions, get correct numbers.
 - **Judged on:** functionality, mostly the backend. Smallest thing that works end to end and is correct.
 - **Acceptance:** 10 "golden questions" (spend in October, food delivery last month, top 5 merchants, recurring payments, why last month was higher, transactions above ₹5,000, Swiggy + Zomato, average monthly spend, biggest expense, salary this year), each answer checked against SQL, plus user A never seeing user B's data.
-- **In scope:** bank CSV, INR, a fixed category list with `Unidentified`, self-transfers and investments not counted as spend, dummy email login, OpenAI, a read-only DB user for the AI, no `.env` file.
+- **In scope:** bank CSV, INR, a fixed category list with `Unidentified`, self-transfers and investments not counted as spend, dummy email login, OpenAI, the AI can only read the database, no `.env` file.
 
 ## Decisions
 Each card: what we chose, the options, why, and what it costs us.
@@ -34,10 +34,11 @@ Each card: what we chose, the options, why, and what it costs us.
 - **Why:** `₹4.35` is exactly 435 paise, never 434.999; "October" means October in India, not UTC.
 - **Cost:** every display path formats paise to ₹.
 
-### 5. A read-only database user for the AI
-- **Chose:** the agent's tools connect as `orange_agent_ro`, which has only SELECT ([server/scripts/db-up.sh](../../server/scripts/db-up.sh), and [server/scripts/db-create.js](../../server/scripts/db-create.js) in production).
-- **Why:** even a buggy tool or a prompt injection can't change data; the database itself refuses. Tested in [server/test/db-readonly.test.js](../../server/test/db-readonly.test.js).
-- **Cost:** a second pool and a second set of credentials.
+### 5. The AI reads through a read-only database session
+- **Options:** a separate SELECT-only database user for the AI, or the app's one user through a pool whose sessions are read-only.
+- **Chose:** one `DATABASE_URL`; the agent's tools use a separate pool on which every new connection runs `SET SESSION TRANSACTION READ ONLY` ([server/src/db.js](../../server/src/db.js)). The app's own pool is never switched.
+- **Why:** even a buggy tool or a prompt injection can't change data: MySQL refuses INSERT, UPDATE, DELETE and DDL on that pool. Tested in [server/test/db-readonly.test.js](../../server/test/db-readonly.test.js), including a fresh connection. One URL also means one secret to manage on the deploy (the owner's call; an earlier version used a second user).
+- **Cost:** weaker than a separate user. A session can switch itself back to read-write, so this guards against mistakes in our fixed queries, not against arbitrary SQL. That's fine because tools never run model-written SQL.
 
 ### 6. Dummy email login
 - **Chose:** log in with an email only; a new email creates the user; a JWT in an httpOnly cookie ([server/src/auth/routes.js](../../server/src/auth/routes.js)).
@@ -67,3 +68,4 @@ Each card: what we chose, the options, why, and what it costs us.
 | MCP and OAuth | not needed for one app with dummy auth |
 | LLM-as-judge for answers | hard pass/fail gates against SQL are stricter; quality beyond them is a human review |
 | Trace retention jobs | demo-sized data |
+| A separate SELECT-only database user for the AI | one `DATABASE_URL` keeps the deploy simple; the read-only session covers our fixed queries. Worth adding before any text-to-SQL (future work) |

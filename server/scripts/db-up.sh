@@ -4,8 +4,8 @@
 # Creates (if missing):
 #   container  orange-mysql  (mysql:8.0, 127.0.0.1:3306 only, volume orange-mysql-data)
 #   databases  orange_invest_dev, orange_invest_test
-#   users      orange_app       (all privileges on both databases; the server's normal pool)
-#              orange_agent_ro  (SELECT only on both databases; the AI agent's tools)
+#   user       orange_app  (all privileges on both databases). The AI agent's tools use the same user
+#              through a pool whose sessions are READ ONLY (src/db.js), so there's no second user.
 #
 # The passwords below are fixed, dev-only, and match the defaults in src/config.js. The port is bound
 # to 127.0.0.1, so nothing outside this machine can reach it. Never reuse them anywhere real.
@@ -16,7 +16,6 @@ IMAGE=mysql:8.0
 VOLUME=orange-mysql-data
 ROOT_PASSWORD=orange_root_dev
 APP_PASSWORD=orange_app_dev
-RO_PASSWORD=orange_agent_ro_dev
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker is not running. Start Docker Desktop and retry." >&2
@@ -66,12 +65,8 @@ CREATE USER IF NOT EXISTS 'orange_app'@'%' IDENTIFIED BY '$APP_PASSWORD';
 GRANT ALL PRIVILEGES ON orange_invest_dev.*  TO 'orange_app'@'%';
 GRANT ALL PRIVILEGES ON orange_invest_test.* TO 'orange_app'@'%';
 
-CREATE USER IF NOT EXISTS 'orange_agent_ro'@'%' IDENTIFIED BY '$RO_PASSWORD';
-GRANT SELECT ON orange_invest_dev.*  TO 'orange_agent_ro'@'%';
-GRANT SELECT ON orange_invest_test.* TO 'orange_agent_ro'@'%';
-
 FLUSH PRIVILEGES;
 SQL
 
-echo "databases orange_invest_dev, orange_invest_test and users orange_app, orange_agent_ro are ready on 127.0.0.1:3306"
+echo "databases orange_invest_dev, orange_invest_test and user orange_app are ready on 127.0.0.1:3306"
 echo "next: npm run db:init"

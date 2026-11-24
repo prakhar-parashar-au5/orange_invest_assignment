@@ -68,7 +68,6 @@ describe('admin login code (production)', () => {
     const c = loadConfig({
       NODE_ENV: 'production',
       DATABASE_URL: 'mysql://a:b@h:1/x_demo',
-      DATABASE_READONLY_URL: 'mysql://c:d@h:1/x_demo',
       JWT_SECRET: 's',
       OPENAI_API_KEY: 'k',
       ADMIN_LOGIN_CODE: 'zzz',

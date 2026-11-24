@@ -8,7 +8,7 @@
 //
 //   npm run artifacts:build [-- --client-dir ../../../orange-frontend-builder-ag/orange-frontend/client] [--skip-tests]
 //
-// Reads the dev DB with the read-only user (the login and admin requests in step 4 go through the
+// Reads the dev DB through a read-only session (the login and admin requests in step 4 go through the
 // app, which only upserts existing users). Writes only to docs/artifacts/.
 import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import moment from 'moment-timezone';
 import request from 'supertest';
 import { loadConfig } from '../src/config.js';
-import { createPool } from '../src/db.js';
+import { createPool, createReadOnlyPool } from '../src/db.js';
 import { createApp } from '../src/app.js';
 import { createTools } from '../src/agent/tools.js';
 import { applySchema } from './db-init.js';
@@ -213,7 +213,7 @@ async function explainAll(ro, statements) {
 
 async function buildPerf() {
   const config = loadConfig({ ...process.env, NODE_ENV: 'development' });
-  const ro = createPool(config.readonlyDatabaseUrl);
+  const ro = createReadOnlyPool(config.databaseUrl);
   const appDb = createPool(config.databaseUrl);
   try {
     const [[a]] = await ro.query("SELECT id FROM users WHERE email = 'a@test.local'");
@@ -275,7 +275,7 @@ async function buildPerf() {
 
 // ---------- 5. evals ----------
 async function buildEvals() {
-  const ro = createPool(loadConfig({ ...process.env, NODE_ENV: 'development' }).readonlyDatabaseUrl);
+  const ro = createReadOnlyPool(loadConfig({ ...process.env, NODE_ENV: 'development' }).databaseUrl);
   try {
     const [runs] = await ro.query(
       `SELECT r.* FROM eval_runs r

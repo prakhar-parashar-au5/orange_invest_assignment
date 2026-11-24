@@ -8,19 +8,19 @@ Every number on this page is measured, with its date and the command that produc
 - **Client:** the React app's tests, run from the frontend checkout.
 
 <!-- generated:tests -->
-_Measured 2026-11-24 23:45 IST by `npm run artifacts:build`. Wall time (whole run, including startup and database reset): server 2.1 s, client 1.9 s._
+_Measured 2026-11-25 00:03 IST by `npm run artifacts:build`. Wall time (whole run, including startup and database reset): server 2.2 s, client 2.0 s._
 
 | layer | files | tests | passed | failed | time in tests |
 |---|---|---|---|---|---|
-| server unit | 7 | 184 | 184 | 0 | 0.10 s |
-| server integration (MySQL) | 17 | 258 | 258 | 0 | 4.59 s |
-| client | 7 | 57 | 57 | 0 | 1.39 s |
+| server unit | 7 | 184 | 184 | 0 | 0.11 s |
+| server integration (MySQL) | 17 | 259 | 259 | 0 | 4.57 s |
+| client | 7 | 57 | 57 | 0 | 1.44 s |
 <!-- /generated:tests -->
 
 ## Tests that matter
 | test | the failure it prevents |
 |---|---|
-| [The read-only user can't INSERT, UPDATE, DELETE or CREATE](../../server/test/db-readonly.test.js) | a buggy tool or a prompt injection changing data |
+| [The agent's read-only session pool can't INSERT, UPDATE, DELETE or CREATE, even on a fresh connection](../../server/test/db-readonly.test.js) | a buggy tool or a prompt injection changing data |
 | [User B can't see user A's upload or transactions](../../server/test/uploads.test.js), and [B's tools return only B's rows](../../server/test/agent-tools.test.js) | one user's finances leaking to another |
 | [Money parsing: `4.35` is 435 paise, Indian grouping, Dr/Cr](../../server/test/ingest-parsing.test.js) | floating-point rounding errors in totals |
 | [Every golden question's tool result equals hand-written SQL](../../server/test/agent-tools.test.js) | the agent quoting a wrong number with confidence |
@@ -30,22 +30,22 @@ _Measured 2026-11-24 23:45 IST by `npm run artifacts:build`. Wall time (whole ru
 Main queries on the seeded dev data (user `a@test.local`, 616 transactions), each run 50 times through the real tool code on the read-only pool. `EXPLAIN` shows the index MySQL chose and how many rows it expects to read.
 
 <!-- generated:perf -->
-_Measured 2026-11-24 23:45 IST by `npm run artifacts:build` on orange_invest_dev: 616 transactions for a@test.local, 33 traces in total. Local Docker MySQL on a laptop, so treat these as relative, not production, numbers._
+_Measured 2026-11-25 00:03 IST by `npm run artifacts:build` on orange_invest_dev: 616 transactions for a@test.local, 33 traces in total. Local Docker MySQL on a laptop, so treat these as relative, not production, numbers._
 
 | query | p50 ms | p95 ms | EXPLAIN: index used per table (access type, estimated rows) |
 |---|---|---|---|
-| spend_summary by category, this year | 1.77 | 3.96 | transactions: uq_txn_user_dedup (ref, ~616 rows) |
-| list_transactions, last 30 days | 0.97 | 1.26 | transactions: idx_txn_user_date (range, ~49 rows) |
-| top_merchants, this year | 0.78 | 0.9 | transactions: uq_txn_user_dedup (ref, ~616 rows) |
-| uploads list (GET /api/uploads) | 0.92 | 1.58 | uploads: idx_uploads_user_created (ref, ~1 rows) |
-| trace summary (GET /api/admin/ai/summary?window=7d) | 3.22 | 4.46 | t: idx_trace_status_created (index, ~33 rows); c: **none** (ALL, ~30 rows); r: **none** (ALL, ~1 rows) |
+| spend_summary by category, this year | 1.59 | 3.7 | transactions: uq_txn_user_dedup (ref, ~616 rows) |
+| list_transactions, last 30 days | 0.9 | 1.2 | transactions: idx_txn_user_date (range, ~49 rows) |
+| top_merchants, this year | 0.79 | 0.9 | transactions: uq_txn_user_dedup (ref, ~616 rows) |
+| uploads list (GET /api/uploads) | 0.89 | 1.47 | uploads: idx_uploads_user_created (ref, ~1 rows) |
+| trace summary (GET /api/admin/ai/summary?window=7d) | 3.27 | 3.98 | t: idx_trace_status_created (index, ~33 rows); c: **none** (ALL, ~30 rows); r: **none** (ALL, ~1 rows) |
 <!-- /generated:perf -->
 
 ## AI evaluation (generated)
 The eval runner asks the live agent a fixed corpus ([server/eval/corpus.json](../../server/eval/corpus.json)) and grades each answer with hard pass/fail gates against independent SQL ([server/eval/oracle.js](../../server/eval/oracle.js)). The latest run per prompt version:
 
 <!-- generated:evals -->
-_Read 2026-11-24 23:45 IST from orange_invest_dev by `npm run artifacts:build`._
+_Read 2026-11-25 00:03 IST from orange_invest_dev by `npm run artifacts:build`._
 
 | prompt | run | status | model | passed | failed | blocked | of | started |
 |---|---|---|---|---|---|---|---|---|

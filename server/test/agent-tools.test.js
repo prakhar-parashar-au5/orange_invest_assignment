@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import moment from 'moment-timezone';
 import { testConfig, uniqueEmail } from './helpers.js';
-import { createPool } from '../src/db.js';
+import { createPool, createReadOnlyPool } from '../src/db.js';
 import { createCategoriser } from '../src/categorise/index.js';
 import { ingestStatement } from '../src/ingest/ingest.js';
 import { generateStatement } from '../scripts/gen-statement.js';
@@ -43,7 +43,7 @@ const one = async (sql, params) => {
 beforeAll(async () => {
   const config = testConfig();
   db = createPool(config.databaseUrl);
-  ro = createPool(config.readonlyDatabaseUrl);
+  ro = createReadOnlyPool(config.databaseUrl);
   A = await makeUser('tools-a', 1);
   B = await makeUser('tools-b', 2);
   C = await makeUser('tools-c', null);
@@ -289,7 +289,7 @@ describe('isolation: tools only ever see their own user', () => {
 
   it('runs on the read-only pool, so a write through it would fail', async () => {
     await expect(ro.query("UPDATE transactions SET category = 'Rent' WHERE id = 0")).rejects.toMatchObject({
-      code: 'ER_TABLEACCESS_DENIED_ERROR',
+      code: 'ER_CANT_EXECUTE_IN_READ_ONLY_TRANSACTION',
     });
   });
 });

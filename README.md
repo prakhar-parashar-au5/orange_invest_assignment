@@ -43,7 +43,7 @@ Health check: `curl http://localhost:4101/api/health` → `{"status":"ok"}`
 
 | script | what it does |
 |---|---|
-| `npm run db:up` | Starts container `orange-mysql` (`mysql:8.0`) on `127.0.0.1:3306` with volume `orange-mysql-data`. Creates `orange_invest_dev`, `orange_invest_test`, the app user `orange_app`, and the SELECT-only agent user `orange_agent_ro`. Safe to re-run. |
+| `npm run db:up` | Starts container `orange-mysql` (`mysql:8.0`) on `127.0.0.1:3306` with volume `orange-mysql-data`. Creates `orange_invest_dev`, `orange_invest_test` and the app user `orange_app`. Safe to re-run. |
 | `npm run db:down` | Stops the container. Data stays in the volume. |
 | `npm run db:init` | Applies `db/schema.sql` to `DATABASE_URL` (default `orange_invest_dev`). Every statement is `IF NOT EXISTS`. |
 | `npm run db:reset:test` | Drops and recreates `orange_invest_test`, then applies the schema. `npm test` does this itself before and after the run. |
@@ -80,9 +80,9 @@ All of them are optional locally. The names are listed in `server/.env.example`.
 | `PORT` | `4101` | |
 | `CLIENT_ORIGIN` | `http://localhost:5181` | set it to the deployed client URL (for CORS) |
 | `DATABASE_URL` | local `orange_app` → `orange_invest_dev` (`_test` under `NODE_ENV=test`) | yes |
-| `DATABASE_READONLY_URL` | local `orange_agent_ro`, same DB | yes |
 | `JWT_SECRET` | a fixed dev string | yes |
 | `OPENAI_API_KEY` | none | yes |
+| `ADMIN_LOGIN_CODE` | none (ignored outside production) | yes: admin accounts must send it as `code` at login |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | |
 | `LOG_LEVEL` | `info` (`debug` adds agent traces) | |
 
@@ -94,12 +94,12 @@ The chat agent answers by calling **typed tools**. It never writes SQL.
 
 ```
 question → LLM (with tool definitions) → tool call {name, args} → server validates args, resolves the period
-         → query builder adds user_id = ? and runs parameterised SQL on a SELECT-only DB user
+         → query builder adds user_id = ? and runs parameterised SQL on a read-only session pool
          → small JSON result (money as paise + ₹ string) → LLM writes the answer → stored with its tool trace
 ```
 
 **Why typed tools instead of text-to-SQL**
-- **Isolation.** The model can't choose whose data it reads. `user_id` comes from the session cookie and is bound inside the query builder (`server/src/agent/query.js`). It isn't a tool parameter, so a prompt injection or a confused model still can't reach another user's rows. The tools also connect as `orange_agent_ro`, which only has SELECT, so even a bug can't write.
+- **Isolation.** The model can't choose whose data it reads. `user_id` comes from the session cookie and is bound inside the query builder (`server/src/agent/query.js`). It isn't a tool parameter, so a prompt injection or a confused model still can't reach another user's rows. The tools also run on a separate pool whose every MySQL session is `READ ONLY` (`server/src/db.js`), so even a bug can't write.
 - **Correctness.** Periods ("last month", "October") are resolved on the server in IST. Sums, deltas and averages are computed in SQL. "Spend" has one definition (`spendFilterSql`). The model copies numbers from tool results instead of doing arithmetic or inventing date ranges.
 - **Testability.** Each tool is a pure function of (user, arguments, now). The tests compare every golden question's tool result with a hand-written SQL query on a seeded dataset, and run the agent loop against a mocked OpenAI client.
 
@@ -123,7 +123,7 @@ question → LLM (with tool definitions) → tool call {name, args} → server v
 - Runs and per-attempt results (answer, gates, trace id) are stored and shown at `GET /api/admin/evals`. If the server has no key, the run stops as `BLOCKED`. There's no LLM-as-judge: answer quality beyond the gates is reviewed by hand on the trace.
 
 **Future work**
-- **Text-to-SQL fallback** for questions no tool can express. It would run behind a per-user read-only view (or row-level filtering) on a SELECT-only user, with a statement allow-list, a row and time limit, and the generated SQL logged for review.
+- **Text-to-SQL fallback** for questions no tool can express. It would run behind a per-user read-only view (or row-level filtering) on a read-only session, with a statement allow-list, a row and time limit, and the generated SQL logged for review.
 - **Better categorisation**, in steps:
   1. user corrections
   2. per-user rules learnt from those corrections

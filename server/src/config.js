@@ -9,11 +9,10 @@ const LOCAL_DB_HOST = '127.0.0.1:3306';
 const DEFAULT_CLIENT_DIST = fileURLToPath(new URL('../../client/dist', import.meta.url));
 const intEnv = (v, fallback) => (v !== undefined && /^\d+$/.test(v) && Number(v) > 0 ? Number(v) : fallback);
 const LOCAL_APP_USER = 'orange_app:orange_app_dev';
-const LOCAL_RO_USER = 'orange_agent_ro:orange_agent_ro_dev';
 // Dev-only. Production refuses to start without a real JWT_SECRET.
 const LOCAL_JWT_SECRET = 'orange-invest-local-dev-only-jwt-secret';
 
-const REQUIRED_IN_PRODUCTION = ['DATABASE_URL', 'DATABASE_READONLY_URL', 'JWT_SECRET', 'OPENAI_API_KEY'];
+const REQUIRED_IN_PRODUCTION = ['DATABASE_URL', 'JWT_SECRET', 'OPENAI_API_KEY', 'ADMIN_LOGIN_CODE'];
 
 /**
  * @param {Record<string, string | undefined>} env usually process.env
@@ -44,7 +43,6 @@ export function loadConfig(env = process.env) {
       uploadsPerDay: intEnv(env.UPLOADS_PER_DAY, 20),
     },
     databaseUrl: env.DATABASE_URL || `mysql://${LOCAL_APP_USER}@${LOCAL_DB_HOST}/${localDbName}`,
-    readonlyDatabaseUrl: env.DATABASE_READONLY_URL || `mysql://${LOCAL_RO_USER}@${LOCAL_DB_HOST}/${localDbName}`,
     jwtSecret: env.JWT_SECRET || LOCAL_JWT_SECRET,
     cookieSecure: isProduction,
     openaiApiKey: env.OPENAI_API_KEY || null,
