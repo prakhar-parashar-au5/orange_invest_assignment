@@ -1,0 +1,13 @@
+{
+  "name": "orange-invest",
+  "private": true,
+  "description": "One deployable app: Express serves the API and the built React client from one origin.",
+  "engines": {
+    "node": "22.23.1"
+  },
+  "scripts": {
+    "build": "npm ci --prefix client && VITE_API_URL= npm run build --prefix client && npm ci --omit=dev --prefix server",
+    "start": "npm start --prefix server",
+    "predeploy:db": "npm run db:create --prefix server && npm run db:init --prefix server"
+  }
+}

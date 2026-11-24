@@ -1,0 +1,145 @@
+{
+  "generated_at": "2026-11-24 23:45 IST",
+  "command": "npm run artifacts:build",
+  "tests": {
+    "layers": [
+      {
+        "layer": "server unit",
+        "command": "cd server && npx vitest run",
+        "files": 7,
+        "tests": 184,
+        "passed": 184,
+        "failed": 0,
+        "test_time_ms": 96
+      },
+      {
+        "layer": "server integration (MySQL)",
+        "command": "cd server && npx vitest run",
+        "files": 17,
+        "tests": 258,
+        "passed": 258,
+        "failed": 0,
+        "test_time_ms": 4589
+      },
+      {
+        "layer": "client",
+        "command": "cd client && npx vitest run",
+        "files": 7,
+        "tests": 57,
+        "passed": 57,
+        "failed": 0,
+        "test_time_ms": 1393
+      }
+    ],
+    "wall_ms": {
+      "server": 2057,
+      "client": 1871
+    }
+  },
+  "performance": {
+    "user_transactions": 616,
+    "traces": 33,
+    "results": [
+      {
+        "query": "spend_summary by category, this year",
+        "runs": 50,
+        "p50_ms": 1.77,
+        "p95_ms": 3.96,
+        "explain": [
+          {
+            "table": "transactions",
+            "type": "ref",
+            "key": "uq_txn_user_dedup",
+            "rows": 616
+          }
+        ]
+      },
+      {
+        "query": "list_transactions, last 30 days",
+        "runs": 50,
+        "p50_ms": 0.97,
+        "p95_ms": 1.26,
+        "explain": [
+          {
+            "table": "transactions",
+            "type": "range",
+            "key": "idx_txn_user_date",
+            "rows": 49
+          }
+        ]
+      },
+      {
+        "query": "top_merchants, this year",
+        "runs": 50,
+        "p50_ms": 0.78,
+        "p95_ms": 0.9,
+        "explain": [
+          {
+            "table": "transactions",
+            "type": "ref",
+            "key": "uq_txn_user_dedup",
+            "rows": 616
+          }
+        ]
+      },
+      {
+        "query": "uploads list (GET /api/uploads)",
+        "runs": 50,
+        "p50_ms": 0.92,
+        "p95_ms": 1.58,
+        "explain": [
+          {
+            "table": "uploads",
+            "type": "ref",
+            "key": "idx_uploads_user_created",
+            "rows": 1
+          }
+        ]
+      },
+      {
+        "query": "trace summary (GET /api/admin/ai/summary?window=7d)",
+        "runs": 50,
+        "p50_ms": 3.22,
+        "p95_ms": 4.46,
+        "explain": [
+          {
+            "table": "t",
+            "type": "index",
+            "key": "idx_trace_status_created",
+            "rows": 33
+          },
+          {
+            "table": "c",
+            "type": "ALL",
+            "key": null,
+            "rows": 30
+          },
+          {
+            "table": "r",
+            "type": "ALL",
+            "key": null,
+            "rows": 1
+          }
+        ]
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt_version": "v1",
+      "model": "gpt-4.1-mini",
+      "status": "BLOCKED",
+      "label": "BE-010 blocked-path check (no key)",
+      "started_at": "2026-11-24 23:22 IST",
+      "cases_total": 21,
+      "cases_passed": 0,
+      "cases_failed": 0,
+      "cases_blocked": 1
+    }
+  ],
+  "request_flow": {
+    "steps": 13,
+    "found": 13
+  }
+}
