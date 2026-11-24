@@ -8,9 +8,7 @@ describe('loadConfig', () => {
     expect(config.port).toBe(4101);
     expect(config.clientOrigin).toBe('http://localhost:5181');
     expect(config.databaseUrl).toBe('mysql://orange_app:orange_app_dev@127.0.0.1:3306/orange_invest_dev');
-    expect(config.readonlyDatabaseUrl).toBe(
-      'mysql://orange_agent_ro:orange_agent_ro_dev@127.0.0.1:3306/orange_invest_dev',
-    );
+    expect(config).not.toHaveProperty('readonlyDatabaseUrl');
     expect(config.jwtSecret).toBeTruthy();
     expect(config.cookieSecure).toBe(false);
   });
@@ -19,7 +17,6 @@ describe('loadConfig', () => {
     const config = loadConfig({ NODE_ENV: 'test' });
 
     expect(config.databaseUrl).toMatch(/\/orange_invest_test$/);
-    expect(config.readonlyDatabaseUrl).toMatch(/\/orange_invest_test$/);
   });
 
   it('uses env values when given', () => {
@@ -27,7 +24,6 @@ describe('loadConfig', () => {
       PORT: '4100',
       CLIENT_ORIGIN: 'http://localhost:5180',
       DATABASE_URL: 'mysql://a:b@h:1/x',
-      DATABASE_READONLY_URL: 'mysql://c:d@h:1/x',
       JWT_SECRET: 's',
       OPENAI_MODEL: 'some-model',
     });
@@ -35,14 +31,13 @@ describe('loadConfig', () => {
     expect(config.port).toBe(4100);
     expect(config.clientOrigin).toBe('http://localhost:5180');
     expect(config.databaseUrl).toBe('mysql://a:b@h:1/x');
-    expect(config.readonlyDatabaseUrl).toBe('mysql://c:d@h:1/x');
     expect(config.jwtSecret).toBe('s');
     expect(config.openaiModel).toBe('some-model');
   });
 
   it('throws in production when a required secret is missing, naming every missing one', () => {
     expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(
-      /DATABASE_URL.*DATABASE_READONLY_URL.*JWT_SECRET.*OPENAI_API_KEY/,
+      /DATABASE_URL, JWT_SECRET, OPENAI_API_KEY, ADMIN_LOGIN_CODE/,
     );
   });
 
@@ -50,9 +45,9 @@ describe('loadConfig', () => {
     const config = loadConfig({
       NODE_ENV: 'production',
       DATABASE_URL: 'mysql://a:b@h:1/x',
-      DATABASE_READONLY_URL: 'mysql://c:d@h:1/x',
       JWT_SECRET: 's',
       OPENAI_API_KEY: 'k',
+      ADMIN_LOGIN_CODE: 'c',
     });
 
     expect(config.cookieSecure).toBe(true);

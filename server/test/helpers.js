@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { loadConfig } from '../src/config.js';
-import { createPool } from '../src/db.js';
+import { createPool, createReadOnlyPool } from '../src/db.js';
 import { createApp } from '../src/app.js';
 import { createCategoriser } from '../src/categorise/index.js';
 
@@ -23,7 +23,7 @@ export function testApp({ agent = null, recorder = null, limits = {} } = {}) {
   // Generous limits by default so ordinary tests never hit them.
   const config = { ...base, limits: { chatPerWindow: 1000, chatWindowMs: 600_000, uploadsPerDay: 1000, ...limits } };
   const db = createPool(config.databaseUrl);
-  const dbReadonly = createPool(config.readonlyDatabaseUrl);
+  const dbReadonly = createReadOnlyPool(config.databaseUrl);
   const categoriser = createCategoriser({ db, classifier: null, logger: { warn() {} } });
   const app = createApp({ config, db, dbReadonly, categoriser, agent, recorder });
   return {

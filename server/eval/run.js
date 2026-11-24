@@ -1,12 +1,12 @@
 // npm run eval -- --base-url http://localhost:4100 [--repeat-high 3] [--label "text"]
 //
 // Talks to a running server over HTTP, as the seeded personas (a@test.local, b@test.local). Reads
-// traces and the oracle's data straight from the database that server uses (DATABASE_URL and
-// DATABASE_READONLY_URL, by default the local orange_invest_dev). The server needs OPENAI_API_KEY;
+// traces and the oracle's data straight from the database that server uses (DATABASE_URL, by
+// default the local orange_invest_dev), through a read-only session. The server needs OPENAI_API_KEY;
 // without it the run stops as BLOCKED.
 import { readFile } from 'node:fs/promises';
 import { loadConfig } from '../src/config.js';
-import { createPool } from '../src/db.js';
+import { createPool, createReadOnlyPool } from '../src/db.js';
 import { PROMPT_VERSION } from '../src/agent/recorder.js';
 import { describeError } from '../src/util/log-error.js';
 import { runEval } from './runner.js';
@@ -49,7 +49,7 @@ const client = {
 
 const config = loadConfig(process.env);
 const db = createPool(config.databaseUrl);
-const readDb = createPool(config.readonlyDatabaseUrl);
+const readDb = createReadOnlyPool(config.databaseUrl);
 try {
   const corpus = JSON.parse(await readFile(new URL('./corpus.json', import.meta.url), 'utf8'));
   const result = await runEval({

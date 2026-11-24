@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import moment from 'moment-timezone';
 import { testConfig, uniqueEmail } from './helpers.js';
-import { createPool } from '../src/db.js';
+import { createPool, createReadOnlyPool } from '../src/db.js';
 import { createCategoriser } from '../src/categorise/index.js';
 import { recategoriseUser } from '../src/categorise/recategorise.js';
 import { createTools } from '../src/agent/tools.js';
@@ -14,7 +14,7 @@ let ro;
 beforeAll(() => {
   const config = testConfig();
   db = createPool(config.databaseUrl);
-  ro = createPool(config.readonlyDatabaseUrl);
+  ro = createReadOnlyPool(config.databaseUrl);
 });
 afterAll(async () => {
   await db.end();

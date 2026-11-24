@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24 23:45 IST",
+  "generated_at": "2026-11-25 00:03 IST",
   "command": "npm run artifacts:build",
   "tests": {
     "layers": [
@@ -10,16 +10,16 @@
         "tests": 184,
         "passed": 184,
         "failed": 0,
-        "test_time_ms": 96
+        "test_time_ms": 110
       },
       {
         "layer": "server integration (MySQL)",
         "command": "cd server && npx vitest run",
         "files": 17,
-        "tests": 258,
-        "passed": 258,
+        "tests": 259,
+        "passed": 259,
         "failed": 0,
-        "test_time_ms": 4589
+        "test_time_ms": 4573
       },
       {
         "layer": "client",
@@ -28,12 +28,12 @@
         "tests": 57,
         "passed": 57,
         "failed": 0,
-        "test_time_ms": 1393
+        "test_time_ms": 1442
       }
     ],
     "wall_ms": {
-      "server": 2057,
-      "client": 1871
+      "server": 2247,
+      "client": 2009
     }
   },
   "performance": {
@@ -43,8 +43,8 @@
       {
         "query": "spend_summary by category, this year",
         "runs": 50,
-        "p50_ms": 1.77,
-        "p95_ms": 3.96,
+        "p50_ms": 1.59,
+        "p95_ms": 3.7,
         "explain": [
           {
             "table": "transactions",
@@ -57,8 +57,8 @@
       {
         "query": "list_transactions, last 30 days",
         "runs": 50,
-        "p50_ms": 0.97,
-        "p95_ms": 1.26,
+        "p50_ms": 0.9,
+        "p95_ms": 1.2,
         "explain": [
           {
             "table": "transactions",
@@ -71,7 +71,7 @@
       {
         "query": "top_merchants, this year",
         "runs": 50,
-        "p50_ms": 0.78,
+        "p50_ms": 0.79,
         "p95_ms": 0.9,
         "explain": [
           {
@@ -85,8 +85,8 @@
       {
         "query": "uploads list (GET /api/uploads)",
         "runs": 50,
-        "p50_ms": 0.92,
-        "p95_ms": 1.58,
+        "p50_ms": 0.89,
+        "p95_ms": 1.47,
         "explain": [
           {
             "table": "uploads",
@@ -99,8 +99,8 @@
       {
         "query": "trace summary (GET /api/admin/ai/summary?window=7d)",
         "runs": 50,
-        "p50_ms": 3.22,
-        "p95_ms": 4.46,
+        "p50_ms": 3.27,
+        "p95_ms": 3.98,
         "explain": [
           {
             "table": "t",

@@ -13,9 +13,9 @@ import { testApp, loggedInAgent } from './helpers.js';
 const PROD_ENV = {
   NODE_ENV: 'production',
   DATABASE_URL: 'mysql://a:b@h:1/orange_invest_demo',
-  DATABASE_READONLY_URL: 'mysql://orange_agent_ro:c@h:1/orange_invest_demo',
   JWT_SECRET: 's',
   OPENAI_API_KEY: 'k',
+  ADMIN_LOGIN_CODE: 'c',
 };
 
 describe('production config', () => {
@@ -124,33 +124,23 @@ describe('rate limits', () => {
 });
 
 describe('db:create', () => {
-  const urls = (db, ro = 'orange_agent_ro') => ({
-    databaseUrl: `mysql://root:pw@h:3306/${db}`,
-    readonlyUrl: `mysql://${ro}:s3cr%40t-long-enough@h:3306/${db}`,
-  });
+  const urls = (db) => ({ databaseUrl: `mysql://root:s3cr%40t-pw@h:3306/${db}` });
 
   it.each([['orange_invest_demo'], ['railway'], ['a_1']])('accepts the database name %s', (db) => {
     expect(() => planDbCreate(urls(db))).not.toThrow();
   });
 
-  it.each([['orange-invest'], ['Orange'], ['x;DROP DATABASE y'], ['a'.repeat(65)], ['']])('rejects the database name %o', (db) => {
+  it.each([['orange-invest'], ['Orange'], ['x;DROP DATABASE y'], ['a'.repeat(65)], [''], ['%E0%A4%A']])('rejects the database name %o', (db) => {
     expect(() => planDbCreate(urls(db))).toThrow(/database name/);
   });
 
-  it("rejects a read-only user name that isn't [a-z0-9_], or a different database in the two URLs", () => {
-    expect(() => planDbCreate(urls('orange_invest_demo', "ro'@'%"))).toThrow(/read-only user/);
-    expect(() => planDbCreate({ databaseUrl: 'mysql://r:p@h/a_db', readonlyUrl: 'mysql://ro:long-enough-pw@h/b_db' })).toThrow(/same database/);
-  });
-
-  it('grants the read-only user SELECT on that one database and nothing else; the password is a bound value', () => {
+  it('only creates the database: no users, no grants, and no secret in the SQL or the log line', () => {
     const plan = planDbCreate(urls('orange_invest_demo'));
     const sql = plan.statements.map((s) => s.sql).join('\n');
 
+    expect(plan.statements).toHaveLength(1);
     expect(sql).toContain('CREATE DATABASE IF NOT EXISTS `orange_invest_demo`');
-    expect(sql).toContain("GRANT SELECT ON `orange_invest_demo`.* TO 'orange_agent_ro'@'%'");
-    expect(sql).not.toMatch(/GRANT (ALL|INSERT|UPDATE|DELETE|CREATE|DROP)/);
-    expect(sql).not.toContain('s3cr@t'); // never inlined into the SQL text
-    expect(plan.statements.find((s) => /CREATE USER/.test(s.sql)).params).toEqual(['s3cr@t-long-enough']);
-    expect(JSON.stringify(plan.describe)).not.toContain('s3cr');
+    expect(sql).not.toMatch(/USER|GRANT/);
+    expect(JSON.stringify(plan)).not.toContain('s3cr');
   });
 });

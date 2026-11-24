@@ -30,3 +30,17 @@ export function createPool(url, opts = {}) {
 
   return pool;
 }
+
+/**
+ * The agent's pool: same DATABASE_URL and user as the app, but every connection is put in READ ONLY
+ * transaction mode the moment it's created, before it's handed out. MySQL then rejects INSERT,
+ * UPDATE and DELETE on it (ER_CANT_EXECUTE_IN_READ_ONLY_TRANSACTION). A separate pool, so the
+ * shared app pool is never switched.
+ */
+export function createReadOnlyPool(url, opts = {}) {
+  const pool = createPool(url, { connectionLimit: 5, ...opts });
+  pool.pool.on('connection', (conn) => {
+    conn.query('SET SESSION TRANSACTION READ ONLY');
+  });
+  return pool;
+}
