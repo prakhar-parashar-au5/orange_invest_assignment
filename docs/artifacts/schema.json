@@ -1,0 +1,1144 @@
+{
+  "generated_at": "2026-11-24 23:45 IST",
+  "command": "npm run artifacts:build",
+  "source": "server/db/schema.sql applied to orange_invest_test",
+  "tables": [
+    {
+      "name": "ai_model_calls",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "trace_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "seq",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "model",
+          "type": "varchar(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "status",
+          "type": "enum('IN_PROGRESS','SUCCEEDED','FAILED')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "tokens_in",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "tokens_out",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "latency_ms",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "finish_reason",
+          "type": "varchar(32)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "requested_tools",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "error_class",
+          "type": "varchar(64)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "provider_http_status",
+          "type": "smallint",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_model_call_seq",
+          "unique": true,
+          "columns": [
+            "trace_id",
+            "seq"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "trace_id",
+          "references": "ai_traces.id"
+        }
+      ]
+    },
+    {
+      "name": "ai_tool_calls",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "trace_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "seq",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "round",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "name",
+          "type": "varchar(64)",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "args_json",
+          "type": "json",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "validation_status",
+          "type": "enum('OK','REJECTED')",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "result_json",
+          "type": "json",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "status",
+          "type": "enum('IN_PROGRESS','SUCCEEDED','FAILED','REJECTED')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "latency_ms",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "error",
+          "type": "varchar(300)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_tool_call_name",
+          "unique": false,
+          "columns": [
+            "name"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_tool_call_seq",
+          "unique": true,
+          "columns": [
+            "trace_id",
+            "seq"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "trace_id",
+          "references": "ai_traces.id"
+        }
+      ]
+    },
+    {
+      "name": "ai_trace_reviews",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "trace_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "UNI"
+        },
+        {
+          "name": "verdict",
+          "type": "enum('good','bad','needs_fix')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "note",
+          "type": "varchar(2000)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "reviewer_id",
+          "type": "bigint unsigned",
+          "nullable": true,
+          "key": "MUL"
+        },
+        {
+          "name": "version",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "fk_review_user",
+          "unique": false,
+          "columns": [
+            "reviewer_id"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_review_trace",
+          "unique": true,
+          "columns": [
+            "trace_id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "reviewer_id",
+          "references": "users.id"
+        },
+        {
+          "column": "trace_id",
+          "references": "ai_traces.id"
+        }
+      ]
+    },
+    {
+      "name": "ai_traces",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "conversation_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "user_message_id",
+          "type": "bigint unsigned",
+          "nullable": true,
+          "key": "MUL"
+        },
+        {
+          "name": "assistant_message_id",
+          "type": "bigint unsigned",
+          "nullable": true,
+          "key": "MUL"
+        },
+        {
+          "name": "status",
+          "type": "enum('IN_PROGRESS','SUCCEEDED','FAILED')",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "error_stage",
+          "type": "varchar(20)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "error_class",
+          "type": "varchar(64)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "provider_http_status",
+          "type": "smallint",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "model",
+          "type": "varchar(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "prompt_version",
+          "type": "varchar(16)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "rounds",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "tokens_in",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "tokens_out",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "latency_ms",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "finished_at",
+          "type": "datetime(3)",
+          "nullable": true,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "fk_trace_amsg",
+          "unique": false,
+          "columns": [
+            "assistant_message_id"
+          ]
+        },
+        {
+          "name": "fk_trace_umsg",
+          "unique": false,
+          "columns": [
+            "user_message_id"
+          ]
+        },
+        {
+          "name": "idx_trace_conv",
+          "unique": false,
+          "columns": [
+            "conversation_id",
+            "id"
+          ]
+        },
+        {
+          "name": "idx_trace_created",
+          "unique": false,
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "idx_trace_status_created",
+          "unique": false,
+          "columns": [
+            "status",
+            "created_at"
+          ]
+        },
+        {
+          "name": "idx_trace_user_created",
+          "unique": false,
+          "columns": [
+            "user_id",
+            "created_at"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "assistant_message_id",
+          "references": "messages.id"
+        },
+        {
+          "column": "conversation_id",
+          "references": "conversations.id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.id"
+        },
+        {
+          "column": "user_message_id",
+          "references": "messages.id"
+        }
+      ]
+    },
+    {
+      "name": "conversations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "title",
+          "type": "varchar(60)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_conv_user_updated",
+          "unique": false,
+          "columns": [
+            "user_id",
+            "updated_at"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "user_id",
+          "references": "users.id"
+        }
+      ]
+    },
+    {
+      "name": "eval_results",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "run_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "case_id",
+          "type": "varchar(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "risk",
+          "type": "enum('high','normal')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "persona",
+          "type": "varchar(254)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "attempt",
+          "type": "smallint",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "verdict",
+          "type": "enum('pass','fail','blocked')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "gates_json",
+          "type": "json",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "answer_text",
+          "type": "mediumtext",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "trace_id",
+          "type": "bigint unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "latency_ms",
+          "type": "int unsigned",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_eval_result",
+          "unique": true,
+          "columns": [
+            "run_id",
+            "case_id",
+            "attempt"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "run_id",
+          "references": "eval_runs.id"
+        }
+      ]
+    },
+    {
+      "name": "eval_runs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "label",
+          "type": "varchar(120)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "model",
+          "type": "varchar(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "prompt_version",
+          "type": "varchar(16)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "status",
+          "type": "enum('RUNNING','FINISHED','BLOCKED')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "cases_total",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "cases_passed",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "cases_failed",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "cases_blocked",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "started_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "finished_at",
+          "type": "datetime(3)",
+          "nullable": true,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_eval_run_started",
+          "unique": false,
+          "columns": [
+            "started_at"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "merchant_categories",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "merchant_key",
+          "type": "varchar(120)",
+          "nullable": false,
+          "key": "UNI"
+        },
+        {
+          "name": "category",
+          "type": "varchar(40)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "source",
+          "type": "enum('rule','llm')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_merchant_key",
+          "unique": true,
+          "columns": [
+            "merchant_key"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "messages",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "conversation_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "role",
+          "type": "enum('user','assistant')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "content",
+          "type": "mediumtext",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "tool_calls_json",
+          "type": "json",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_msg_conv",
+          "unique": false,
+          "columns": [
+            "conversation_id",
+            "id"
+          ]
+        },
+        {
+          "name": "idx_msg_user",
+          "unique": false,
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "conversation_id",
+          "references": "conversations.id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.id"
+        }
+      ]
+    },
+    {
+      "name": "transactions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "upload_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "source",
+          "type": "varchar(40)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "txn_date",
+          "type": "date",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "description_raw",
+          "type": "varchar(500)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "merchant",
+          "type": "varchar(120)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "category",
+          "type": "varchar(40)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "amount_paise",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "direction",
+          "type": "enum('debit','credit')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "balance_paise",
+          "type": "bigint",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "channel",
+          "type": "enum('UPI','NEFT','IMPS','RTGS','CARD','ATM','CASH','CHEQUE','OTHER')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "ref",
+          "type": "varchar(64)",
+          "nullable": true,
+          "key": null
+        },
+        {
+          "name": "raw_json",
+          "type": "json",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "dedup_hash",
+          "type": "char(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_txn_upload",
+          "unique": false,
+          "columns": [
+            "upload_id"
+          ]
+        },
+        {
+          "name": "idx_txn_user_category",
+          "unique": false,
+          "columns": [
+            "user_id",
+            "category"
+          ]
+        },
+        {
+          "name": "idx_txn_user_date",
+          "unique": false,
+          "columns": [
+            "user_id",
+            "txn_date"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_txn_user_dedup",
+          "unique": true,
+          "columns": [
+            "user_id",
+            "dedup_hash"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "upload_id",
+          "references": "uploads.id"
+        },
+        {
+          "column": "user_id",
+          "references": "users.id"
+        }
+      ]
+    },
+    {
+      "name": "uploads",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "MUL"
+        },
+        {
+          "name": "filename",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "file_hash",
+          "type": "char(64)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "source_format",
+          "type": "varchar(40)",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "rows_total",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "rows_inserted",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "rows_duplicate",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "rows_rejected",
+          "type": "int unsigned",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_uploads_user_created",
+          "unique": false,
+          "columns": [
+            "user_id",
+            "created_at"
+          ]
+        },
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "column": "user_id",
+          "references": "users.id"
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "key": "PRI"
+        },
+        {
+          "name": "email",
+          "type": "varchar(254)",
+          "nullable": false,
+          "key": "UNI"
+        },
+        {
+          "name": "role",
+          "type": "enum('user','admin')",
+          "nullable": false,
+          "key": null
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "nullable": false,
+          "key": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "uq_users_email",
+          "unique": true,
+          "columns": [
+            "email"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    }
+  ]
+}

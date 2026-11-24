@@ -1,0 +1,45 @@
+{
+  "name": "orange-invest-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "orange-invest API: ingestion of bank statements and a chat agent over the user's transactions.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": "22.23.1"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "./scripts/db-up.sh",
+    "db:down": "./scripts/db-down.sh",
+    "db:init": "node scripts/db-init.js",
+    "db:reset:test": "node scripts/db-init.js --reset-test",
+    "gen:statement": "node scripts/gen-statement.js",
+    "seed:dev": "node scripts/seed-dev.js",
+    "recategorise": "node scripts/recategorise.js",
+    "make-admin": "node scripts/make-admin.js",
+    "fixtures:traces": "node scripts/fixtures-traces.js",
+    "eval": "node eval/run.js",
+    "db:create": "node scripts/db-create.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "artifacts:build": "node scripts/artifacts-build.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "moment-timezone": "^0.6.6",
+    "multer": "^2.5.0",
+    "mysql2": "^3.24.6",
+    "openai": "^7.63.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.2",
+    "vitest": "^5.1.1"
+  }
+}

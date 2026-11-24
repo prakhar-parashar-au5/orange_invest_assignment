@@ -1,0 +1,20 @@
+{
+  "title": "One chat message, from the Send button to the rendered answer",
+  "steps": [
+    { "label": "User presses Send; the chat thread calls send()", "repo": "client", "file": "client/src/features/chat/ChatThread.jsx", "symbol": "async function send(" },
+    { "label": "API client posts the text", "repo": "client", "file": "client/src/api/endpoints.js", "symbol": "export const sendMessage" },
+    { "label": "Express route: POST /api/conversations/:id/messages (auth, rate limit, ownership check)", "repo": "server", "file": "server/src/chat/routes.js", "symbol": "router.post('/conversations/:id/messages'" },
+    { "label": "The trace row is written IN_PROGRESS before any AI call (fail closed)", "repo": "server", "file": "server/src/agent/recorder.js", "symbol": "async startTrace(" },
+    { "label": "Tools are bound to the session user and the read-only pool", "repo": "server", "file": "server/src/agent/tools.js", "symbol": "export function createTools(" },
+    { "label": "Agent loop: up to 5 tool rounds", "repo": "server", "file": "server/src/agent/agent.js", "symbol": "async reply(" },
+    { "label": "OpenAI chat completion with the tool definitions", "repo": "server", "file": "server/src/agent/agent.js", "symbol": "openai.chat.completions.create(" },
+    { "label": "A tool runs, e.g. spend_summary", "repo": "server", "file": "server/src/agent/tools.js", "symbol": "async spend_summary(" },
+    { "label": "Query builder adds user_id = ? and the spend rule; reads transactions", "repo": "server", "file": "server/src/agent/query.js", "symbol": "const clauses = ['user_id = ?'];" },
+    { "label": "Each model and tool call is recorded (ai_model_calls, ai_tool_calls)", "repo": "server", "file": "server/src/agent/recorder.js", "symbol": "export function traceHooks(" },
+    { "label": "Answer and finished trace commit in one transaction (messages, ai_traces)", "repo": "server", "file": "server/src/chat/routes.js", "symbol": "await conn.beginTransaction();" },
+    { "label": "Response: user_message and assistant_message, never tool calls", "repo": "server", "file": "server/src/chat/routes.js", "symbol": "res.status(201).json({ user_message" },
+    { "label": "The client renders the answer as safe markdown (no innerHTML)", "repo": "client", "file": "client/src/features/chat/Markdown.jsx", "symbol": "never innerHTML" }
+  ],
+  "tables_read": ["conversations", "messages", "transactions"],
+  "tables_written": ["messages", "conversations", "ai_traces", "ai_model_calls", "ai_tool_calls"]
+}
