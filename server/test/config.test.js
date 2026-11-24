@@ -37,7 +37,7 @@ describe('loadConfig', () => {
 
   it('throws in production when a required secret is missing, naming every missing one', () => {
     expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(
-      /DATABASE_URL, JWT_SECRET, OPENAI_API_KEY, ADMIN_LOGIN_CODE/,
+      /DATABASE_URL, JWT_SECRET, OPENAI_API_KEY$/,
     );
   });
 
@@ -47,7 +47,6 @@ describe('loadConfig', () => {
       DATABASE_URL: 'mysql://a:b@h:1/x',
       JWT_SECRET: 's',
       OPENAI_API_KEY: 'k',
-      ADMIN_LOGIN_CODE: 'c',
     });
 
     expect(config.cookieSecure).toBe(true);

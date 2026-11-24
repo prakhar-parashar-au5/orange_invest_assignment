@@ -45,7 +45,17 @@ The files below are copied unedited from the coordination folder (which isn't pa
 | settlement (100 rows) | 66 | 1 |
 | **total** | **152** | **15** |
 
-**Accuracy re-check (right vs wrong, not just identified): pending TE-004.** The tester hadn't re-run the labelled sample when this page was written.
+5. **The tester re-checked accuracy** (TE-004, 2026-11-25): a fresh user, the same four statements and the same 103-row hand-labelled random sample as before, with OpenAI on. See [5-TE-004-response.md](../ai-workflow/5-TE-004-response.md).
+
+| | before (TE-003) | after (TE-004) |
+|---|---|---|
+| accuracy, whole sample | 79/103 (77%) | **98/103 (95%)** |
+| by step: rules · person-to-person · LLM · unidentified | 58/58 · 7/7 · 14/36 · 0/2 | 80/80 · 10/13 · 8/9 · 0/1 |
+| per statement: 12-month · astra · planted · settlement | 98% · 40% · 77% · 30% | 97% · 80% · 92% · 100% |
+| rows still `Unidentified`: 12-month · astra · planted · settlement | 78 · 6 · 2 · 66 | 9 · 0 · 1 · 2 |
+| merchants sent to OpenAI | 91 | 7 (all businesses; no person's name) |
+
+**What the re-check found next (open):** the "when in doubt, it's a person" rule now over-reaches. `UPI-MOBILERECHARGE` and `UPI-INTERNET` payments (76 rows) and `Bluebottle` coffee were treated as people, so they got Transfers (others) instead of Bills & utilities or Dining. Spend totals are unaffected, because both categories count as spend, but per-category answers are off. That's the next loop.
 
 ### A shorter loop: golden question 6
-The tester found that "Show all transactions above ₹5,000 in the last 30 days" left out the salary credit, a self-transfer and a SIP, because the model filtered to spend only ([1-TE-002-response-q6-bug.md](../ai-workflow/1-TE-002-response-q6-bug.md)). The fix: the tool description and the system prompt now say that "transactions" means every direction and category, and that `spend_only` is only for spend questions. The prompt version went to `v2` ([server/src/agent/recorder.js](../../server/src/agent/recorder.js)), and the eval oracle was updated to match ([server/eval/oracle.js](../../server/eval/oracle.js)). **Re-check with the live model: pending TE-004.**
+The tester found that "Show all transactions above ₹5,000 in the last 30 days" left out the salary credit, a self-transfer and a SIP, because the model filtered to spend only ([1-TE-002-response-q6-bug.md](../ai-workflow/1-TE-002-response-q6-bug.md)). The fix: the tool description and the system prompt now say that "transactions" means every direction and category, and that `spend_only` is only for spend questions. The prompt version went to `v2` ([server/src/agent/recorder.js](../../server/src/agent/recorder.js)), and the eval oracle was updated to match ([server/eval/oracle.js](../../server/eval/oracle.js)). **Re-checked with the live model (TE-004):** Q6 now lists all 8 rows, including the salary credit, the self-transfer and the SIP, and so do three rephrasings. **But the fix over-corrected:** question 9, "What was my biggest single expense?", now fails 4 times out of 4. The model drops `spend_only`, gets the ₹1,25,000 salary credit as the biggest transaction, and says it can't find an expense. ("The largest amount I've ever spent in one go" still works.) Golden questions are at **9/10, so acceptance isn't met yet.** The fix and a 5-attempt re-test are the next loop. The eval also showed that one attempt per golden question can hide flaky behaviour like this: golden-09 passed its single attempt.

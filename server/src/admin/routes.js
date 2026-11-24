@@ -1,10 +1,11 @@
-// Admin AI observability endpoints (API-CONTRACT.md v1.4, "Admin AI"). Admin only: requireAdmin
-// re-reads the role on every request. These read across all users by design. The list never returns
-// message text; the detail view does.
+// AI observability and eval endpoints (API-CONTRACT.md, "Admin AI" and "Admin evals"). Since BE-016
+// every logged-in user may read and review (a toy dashboard on synthetic data); only DELETE needs
+// role=admin, re-read from the DB on each request (requireAdmin). These read across all users by
+// design. The list never returns message text; the detail view does.
 import { Router } from 'express';
 import moment from 'moment-timezone';
 import { HttpError, badRequest, notFound } from '../http/errors.js';
-import { requireAdmin } from '../auth/session.js';
+import { requireAdmin, requireUser } from '../auth/session.js';
 import { toIstIso } from '../util/time.js';
 import { isValidYmd } from '../ingest/dates.js';
 import { TZ } from '../agent/periods.js';
@@ -90,7 +91,8 @@ const toReviewJson = (r) =>
 
 export function adminRouter({ config, db }) {
   const router = Router();
-  router.use('/admin', requireAdmin(config, db));
+  router.use('/admin', requireUser(config));
+  const adminOnly = requireAdmin(config, db);
 
   router.get('/admin/ai/summary', async (req, res) => {
     const windowKey = req.query.window ?? '24h';
@@ -294,7 +296,7 @@ export function adminRouter({ config, db }) {
     res.json({ review: toReviewJson(review) });
   });
 
-  router.delete('/admin/ai/traces/:id', async (req, res) => {
+  router.delete('/admin/ai/traces/:id', adminOnly, async (req, res) => {
     const id = pathId(req.params.id);
     if (req.query.confirm !== 'true') throw new HttpError(400, 'CONFIRMATION_REQUIRED', 'Add ?confirm=true to delete this trace');
     const [r] = await db.query('DELETE FROM ai_traces WHERE id = ?', [id]);
