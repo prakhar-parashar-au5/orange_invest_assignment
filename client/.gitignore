@@ -1,0 +1,14 @@
+# The frontend branch has no root .gitignore, so everything the client needs is here.
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Env files: never committed. Only the example is.
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.log
