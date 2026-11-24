@@ -57,6 +57,15 @@ describe('artifacts', () => {
     expect(screen.getByRole('link', { name: 'Vite' })).toHaveAttribute('href', 'https://vite.dev')
   })
 
+  it('hides HTML comments such as generated-section markers', async () => {
+    serveArtifact('# Title\n\n<!-- generated:er -->\nGenerated 2026-11-25\n<!-- /generated:er -->\n\nText with an inline <!-- note --> comment.')
+    const { container } = renderApp('/artifacts/requirements', { as: 'a@test.local' })
+    await screen.findByRole('heading', { name: 'Title' })
+    expect(container.textContent).not.toMatch(/generated:er|<!--|-->|note/)
+    expect(screen.getByText(/Generated 2026-11-25/)).toBeInTheDocument()
+    expect(screen.getByText(/Text with an inline/)).toBeInTheDocument()
+  })
+
   it('does not render raw HTML from the markdown', async () => {
     serveArtifact('# Title\n\n<img src=x onerror="alert(1)"><b data-testid="raw-b">bold</b>\n\n<script>window.pwned=1</script>\n\n[js](javascript:alert(1))')
     const { container } = renderApp('/artifacts/requirements', { as: 'a@test.local' })

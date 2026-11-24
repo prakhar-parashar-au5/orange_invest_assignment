@@ -38,34 +38,32 @@ describe('login flow', () => {
     expect(await screen.findByRole('heading', { name: /log in/i })).toBeInTheDocument()
   })
 
-  it('sends the admin code only when it is filled, and shows the 401 message', async () => {
+  it('has only an email field and sends just the email; a 401 shows the server message on the form', async () => {
     const bodies = []
     server.use(
       http.post(`${API_URL}/api/auth/login`, async ({ request }) => {
         const body = await request.json()
         bodies.push(body)
-        if (body.email === 'admin@test.local' && body.code !== 'right') {
+        if (bodies.length === 1) {
           return HttpResponse.json({ error: { code: 'UNAUTHENTICATED', message: 'Login failed' } }, { status: 401 })
         }
         // Log the mock user in too, so the app's next calls (/uploads) are authenticated.
         return HttpResponse.json({ user: seedUser(body.email, { login: true }) })
       }),
     )
-    const { ui } = renderApp('/login')
-    const code = await screen.findByLabelText(/admin code/i)
-    expect(code).toHaveAttribute('type', 'password')
-    expect(code).toHaveAttribute('autocomplete', 'off')
+    const { ui, container } = renderApp('/login')
+    await screen.findByLabelText(/^email/i)
+    expect(screen.queryByLabelText(/code/i)).not.toBeInTheDocument()
+    expect(container.querySelector('input[type="password"]')).toBeNull()
 
     await ui.type(screen.getByLabelText(/^email/i), 'admin@test.local')
     await ui.click(screen.getByRole('button', { name: /log in/i }))
+    // A 401 from login is shown on the form, not treated as an expired session.
     expect(await screen.findByRole('alert')).toHaveTextContent('Login failed')
-    expect(screen.getByRole('heading', { name: /log in/i })).toBeInTheDocument()
-    expect(bodies[0]).toEqual({ email: 'admin@test.local' }) // no `code` key when empty
 
-    await ui.type(code, 'right')
     await ui.click(screen.getByRole('button', { name: /log in/i }))
     expect(await screen.findByRole('heading', { name: /uploads/i })).toBeInTheDocument()
-    expect(bodies[1]).toEqual({ email: 'admin@test.local', code: 'right' })
+    expect(bodies).toEqual([{ email: 'admin@test.local' }, { email: 'admin@test.local' }])
   })
 
   it('shows the server validation message', async () => {

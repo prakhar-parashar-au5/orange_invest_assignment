@@ -31,8 +31,8 @@ and the client are served from one host.
 `VITE_REPO_URL` (default `https://github.com/prakhar-parashar-au5/orange_invest_assignment/blob/main/`)
 is where relative links on the Artifacts pages go. They are resolved from `docs/artifacts/`.
 
-The login form has an optional **Admin code** field. In production an admin account needs it; it's
-sent as `code` only when filled in.
+The login form is email only. Every logged-in user can see AI monitoring and Evals (synthetic data);
+deleting a trace stays admin-only, so only admins see that button.
 
 Artifacts render markdown with raw HTML off. Mermaid diagrams are drawn by a lazily loaded Mermaid
 (`securityLevel: 'strict'`); the Artifacts page and Mermaid are separate chunks, not in the main bundle.
@@ -50,8 +50,8 @@ memory and resets on page reload. To exercise the error paths:
 - a data row with fewer than 3 comma-separated fields → counted as rejected
 - upload the same file twice → every row comes back as a duplicate
 - a chat message containing the word "fail" → `AGENT_UNAVAILABLE`, with a "Try again" button
-- log in as any `admin@…` email (e.g. `admin@test.local`) → admin role, so the Admin pages show 3 seeded
-  traces and 2 eval runs; any other email gets 403 on `/admin/*`
+- log in as any `admin@…` email (e.g. `admin@test.local`) → admin role, which only adds the trace
+  Delete button. Any logged-in user sees AI monitoring (3 seeded traces) and Evals (2 runs)
 
 The mock only mimics the contract's shapes. It doesn't parse real bank columns, and its chat
 replies are canned text.

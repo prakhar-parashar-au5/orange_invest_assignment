@@ -8,6 +8,7 @@ import { useRequest } from '@/lib/useRequest'
 import { formatTimestamp } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { Markdown } from '@/features/chat/Markdown'
+import { useAuth } from '@/features/auth/AuthProvider'
 import { AdminError } from './AdminError'
 import { JsonView } from './JsonView'
 import { ReviewPanel } from './ReviewPanel'
@@ -126,9 +127,13 @@ function Timeline({ data }) {
 
 function DeleteTrace({ traceId }) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+
+  // Delete stays admin-only on the server; only admins see the button.
+  if (user?.role !== 'admin') return null
 
   async function doDelete() {
     setBusy(true)
@@ -137,7 +142,7 @@ function DeleteTrace({ traceId }) {
       await deleteTrace(traceId)
       navigate('/admin/ai/traces', { replace: true })
     } catch (err) {
-      setError(err.message)
+      setError(err.code === 'FORBIDDEN' ? 'Only an admin can delete traces.' : err.message)
       setBusy(false)
     }
   }

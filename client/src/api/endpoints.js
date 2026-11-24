@@ -4,9 +4,7 @@ import { request } from './client'
 // describes it; errors throw ApiError (see client.js).
 
 // ---- auth
-// `code` is the optional admin login code (contract v1.6). It's only sent when filled in.
-export const login = (email, code) =>
-  request('/auth/login', { method: 'POST', body: code ? { email, code } : { email } })
+export const login = (email) => request('/auth/login', { method: 'POST', body: { email } })
 export const logout = () => request('/auth/logout', { method: 'POST' })
 export const getMe = () => request('/auth/me')
 

@@ -27,12 +27,13 @@ export function AppLayout() {
             <NavLink to="/artifacts" className={navClass} data-testid="nav-artifacts">
               Artifacts
             </NavLink>
-            {/* Convenience only. Admin pages still render the backend's 403 for non-admins. */}
-            {user?.role === 'admin' && (
-              <NavLink to="/admin/ai" className={navClass} data-testid="nav-admin">
-                Admin
-              </NavLink>
-            )}
+            {/* FE-006: the AI dashboard is visible to every logged-in user (synthetic data). */}
+            <NavLink to="/admin/ai" className={navClass} data-testid="nav-ai">
+              AI monitoring
+            </NavLink>
+            <NavLink to="/admin/evals" className={navClass} data-testid="nav-evals">
+              Evals
+            </NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <ApiStatus className="hidden sm:inline-flex text-xs" />

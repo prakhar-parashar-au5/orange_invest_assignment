@@ -29,8 +29,8 @@ export function AuthProvider({ children }) {
     return () => setUnauthenticatedHandler(null)
   }, [])
 
-  const login = useCallback(async (email, code) => {
-    const { user } = await api.login(email, code)
+  const login = useCallback(async (email) => {
+    const { user } = await api.login(email)
     setState({ status: 'in', user, error: null })
     return user
   }, [])
