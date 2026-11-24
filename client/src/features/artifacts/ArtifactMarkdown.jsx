@@ -6,6 +6,18 @@ import { MermaidBlock } from './MermaidBlock'
 // Renders artifact markdown as untrusted text: react-markdown with raw HTML off (no rehype-raw),
 // its default URL sanitiser (drops javascript: etc.), GFM tables, and our own link handling.
 
+// Drops HTML comments (e.g. the `<!-- generated:er -->` section markers) from the markdown tree.
+// Other raw HTML is left to react-markdown, which doesn't render it (no rehype-raw).
+function remarkDropComments() {
+  const isComment = (n) => n.type === 'html' && /^\s*<!--[\s\S]*?-->\s*$/.test(n.value)
+  const strip = (node) => {
+    if (!node.children) return
+    node.children = node.children.filter((c) => !isComment(c))
+    node.children.forEach(strip)
+  }
+  return strip
+}
+
 function Link({ href, children }) {
   if (href && href.startsWith('#')) return <a href={href} className="text-primary hover:underline">{children}</a>
   // Relative links point at repo files (the server doesn't serve them), so send them to GitHub.
@@ -60,7 +72,7 @@ const components = {
 export function ArtifactMarkdown({ markdown }) {
   return (
     <div className="text-sm" data-testid="artifact-markdown">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkDropComments]} components={components}>
         {markdown || ''}
       </ReactMarkdown>
     </div>

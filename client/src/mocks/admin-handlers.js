@@ -8,14 +8,18 @@ import { db, nowIso } from './db'
 const url = (p) => `${API_URL}/api${p}`
 const err = (status, code, message) => HttpResponse.json({ error: { code, message } }, { status })
 
-function admin(fn) {
+// FE-006 / BE-016: every logged-in user may read the AI dashboard and review; delete is admin-only.
+function loggedIn(fn) {
   return async (info) => {
     const s = db()
     const user = s.users.find((u) => u.id === s.sessionUserId)
     if (!user) return err(401, 'UNAUTHENTICATED', 'Please log in.')
-    if (user.role !== 'admin') return err(403, 'FORBIDDEN', 'Admins only.')
     return fn({ ...info, user })
   }
+}
+
+function admin(fn) {
+  return loggedIn((info) => (info.user.role === 'admin' ? fn(info) : err(403, 'FORBIDDEN', 'Admins only.')))
 }
 
 const WINDOWS = { '24h': 24, '7d': 7, '30d': 30 }
@@ -84,7 +88,7 @@ function findTrace(id) {
 export const adminHandlers = [
   http.get(
     url('/admin/ai/summary'),
-    admin(({ request }) => {
+    loggedIn(({ request }) => {
       const w = new URL(request.url).searchParams.get('window') || '24h'
       if (!WINDOWS[w]) return err(400, 'VALIDATION_ERROR', 'window must be 24h, 7d or 30d')
       return HttpResponse.json(summary(w))
@@ -93,7 +97,7 @@ export const adminHandlers = [
 
   http.get(
     url('/admin/ai/traces'),
-    admin(({ request }) => {
+    loggedIn(({ request }) => {
       const q = new URL(request.url).searchParams
       const status = q.get('status')
       if (status && !STATUSES.includes(status)) return err(400, 'VALIDATION_ERROR', 'bad status')
@@ -122,7 +126,7 @@ export const adminHandlers = [
 
   http.get(
     url('/admin/ai/traces/:id'),
-    admin(({ params }) => {
+    loggedIn(({ params }) => {
       const tr = findTrace(params.id)
       if (!tr) return err(404, 'NOT_FOUND', 'Trace not found.')
       const { row, ...rest } = tr
@@ -132,7 +136,7 @@ export const adminHandlers = [
 
   http.put(
     url('/admin/ai/traces/:id/review'),
-    admin(async ({ params, request, user }) => {
+    loggedIn(async ({ params, request, user }) => {
       const tr = findTrace(params.id)
       if (!tr) return err(404, 'NOT_FOUND', 'Trace not found.')
       const body = await request.json().catch(() => ({}))
@@ -165,11 +169,11 @@ export const adminHandlers = [
     }),
   ),
 
-  http.get(url('/admin/evals'), admin(() => HttpResponse.json({ runs: db().admin.evalRuns.map((r) => r.run) }))),
+  http.get(url('/admin/evals'), loggedIn(() => HttpResponse.json({ runs: db().admin.evalRuns.map((r) => r.run) }))),
 
   http.get(
     url('/admin/evals/:id'),
-    admin(({ params }) => {
+    loggedIn(({ params }) => {
       const r = db().admin.evalRuns.find((x) => x.run.id === Number(params.id))
       if (!r) return err(404, 'NOT_FOUND', 'Eval run not found.')
       return HttpResponse.json(r)

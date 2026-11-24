@@ -7,21 +7,47 @@ import { API_URL } from '../../api/config'
 import { db } from '../../mocks/db'
 
 const ADMIN = 'admin@test.local'
+const USER = 'a@test.local'
 const api = (p) => `${API_URL}/api${p}`
 
-describe('admin gating', () => {
-  it('hides the Admin nav for a normal user and renders the backend 403 on admin routes', async () => {
-    renderApp('/uploads', { as: 'a@test.local' })
-    await screen.findByRole('heading', { name: /uploads/i })
-    expect(screen.queryByTestId('nav-admin')).not.toBeInTheDocument()
+describe('AI dashboard access (FE-006: every logged-in user)', () => {
+  it('shows the AI monitoring and Evals nav to a normal user, and the pages render', async () => {
+    renderApp('/uploads', { as: USER })
+    expect(await screen.findByTestId('nav-ai')).toHaveAttribute('href', '/admin/ai')
+    expect(screen.getByTestId('nav-evals')).toHaveAttribute('href', '/admin/evals')
 
-    renderApp('/admin/ai', { as: 'a@test.local' })
-    expect(await screen.findByTestId('admin-forbidden')).toHaveTextContent(/admin/i)
+    renderApp('/admin/ai', { as: USER })
+    expect(await screen.findByTestId('summary-status')).toBeInTheDocument()
+    expect(screen.queryByTestId('admin-forbidden')).not.toBeInTheDocument()
   })
 
-  it('shows the Admin nav for an admin', async () => {
-    renderApp('/uploads', { as: ADMIN })
-    expect(await screen.findByTestId('nav-admin')).toHaveAttribute('href', '/admin/ai')
+  it('hides the delete button from a normal user but still lets them review', async () => {
+    renderApp('/admin/ai/traces/41', { as: USER })
+    expect(await screen.findByTestId('review-panel')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /delete trace/i })).not.toBeInTheDocument()
+  })
+
+  it('shows an inline message when the server refuses a delete with 403', async () => {
+    server.use(
+      http.delete(api('/admin/ai/traces/:id'), () =>
+        HttpResponse.json({ error: { code: 'FORBIDDEN', message: 'Admins only.' } }, { status: 403 }),
+      ),
+    )
+    const { ui } = renderApp('/admin/ai/traces/41', { as: ADMIN })
+    await ui.click(await screen.findByRole('button', { name: /delete trace/i }))
+    await ui.click(screen.getByRole('button', { name: /yes, delete/i }))
+    expect(await screen.findByText('Only an admin can delete traces.')).toBeInTheDocument()
+    expect(db().admin.traces.some((x) => x.row.id === 41)).toBe(true)
+  })
+
+  it('still renders a 403 from the server as "Admins only"', async () => {
+    server.use(
+      http.get(api('/admin/ai/summary'), () =>
+        HttpResponse.json({ error: { code: 'FORBIDDEN', message: 'Admins only.' } }, { status: 403 }),
+      ),
+    )
+    renderApp('/admin/ai', { as: USER })
+    expect(await screen.findByTestId('admin-forbidden')).toBeInTheDocument()
   })
 
   it('renders 503 with the server message', async () => {
