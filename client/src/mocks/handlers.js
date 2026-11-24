@@ -2,6 +2,7 @@ import { http, HttpResponse, delay } from 'msw'
 import { API_URL } from '../api/config'
 import { db, nextId, nowIso, findOrCreateUser } from './db'
 import { adminHandlers } from './admin-handlers'
+import { artifactsHandlers } from './artifacts-handlers'
 
 // MSW handlers for every endpoint in API-CONTRACT.md v1.1. Used by the tests and by `npm run dev:mock`.
 // These mimic the contract's shapes and error codes; they are NOT the real parsing or agent logic.
@@ -270,4 +271,5 @@ export const handlers = [
   ),
 
   ...adminHandlers,
+  ...artifactsHandlers,
 ]

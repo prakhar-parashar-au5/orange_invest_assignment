@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '../../test/server'
 import { renderApp } from '../../test/render'
 import { API_URL } from '../../api/config'
+import { seedUser } from '../../mocks/db'
 
 describe('route guard', () => {
   it('sends a logged-out user to the login screen', async () => {
@@ -35,6 +36,36 @@ describe('login flow', () => {
 
     await ui.click(screen.getByRole('button', { name: /log out/i }))
     expect(await screen.findByRole('heading', { name: /log in/i })).toBeInTheDocument()
+  })
+
+  it('sends the admin code only when it is filled, and shows the 401 message', async () => {
+    const bodies = []
+    server.use(
+      http.post(`${API_URL}/api/auth/login`, async ({ request }) => {
+        const body = await request.json()
+        bodies.push(body)
+        if (body.email === 'admin@test.local' && body.code !== 'right') {
+          return HttpResponse.json({ error: { code: 'UNAUTHENTICATED', message: 'Login failed' } }, { status: 401 })
+        }
+        // Log the mock user in too, so the app's next calls (/uploads) are authenticated.
+        return HttpResponse.json({ user: seedUser(body.email, { login: true }) })
+      }),
+    )
+    const { ui } = renderApp('/login')
+    const code = await screen.findByLabelText(/admin code/i)
+    expect(code).toHaveAttribute('type', 'password')
+    expect(code).toHaveAttribute('autocomplete', 'off')
+
+    await ui.type(screen.getByLabelText(/^email/i), 'admin@test.local')
+    await ui.click(screen.getByRole('button', { name: /log in/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Login failed')
+    expect(screen.getByRole('heading', { name: /log in/i })).toBeInTheDocument()
+    expect(bodies[0]).toEqual({ email: 'admin@test.local' }) // no `code` key when empty
+
+    await ui.type(code, 'right')
+    await ui.click(screen.getByRole('button', { name: /log in/i }))
+    expect(await screen.findByRole('heading', { name: /uploads/i })).toBeInTheDocument()
+    expect(bodies[1]).toEqual({ email: 'admin@test.local', code: 'right' })
   })
 
   it('shows the server validation message', async () => {

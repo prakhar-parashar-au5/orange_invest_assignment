@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
 import { LoginPage } from '@/features/auth/LoginPage'
@@ -9,6 +10,9 @@ import { AiOverviewPage } from '@/features/admin/AiOverviewPage'
 import { TracesPage } from '@/features/admin/TracesPage'
 import { TraceDetailPage } from '@/features/admin/TraceDetailPage'
 import { EvalRunPage, EvalRunsPage } from '@/features/admin/EvalsPages'
+
+// Artifacts pull in react-markdown (and, on demand, Mermaid), so they load as their own chunk.
+const ArtifactsPage = lazy(() => import('@/features/artifacts/ArtifactsPage'))
 
 function FullPageMessage({ children }) {
   return <div className="min-h-svh flex items-center justify-center text-muted-foreground">{children}</div>
@@ -43,6 +47,14 @@ export default function App() {
         >
           <Route path="/uploads/:uploadId?" element={<UploadsPage />} />
           <Route path="/chat/:conversationId?" element={<ChatPage />} />
+          <Route
+            path="/artifacts/:name?"
+            element={
+              <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+                <ArtifactsPage />
+              </Suspense>
+            }
+          />
           {/* Admin routes render for anyone logged in; the backend's 403 decides access. */}
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<Navigate to="/admin/ai" replace />} />

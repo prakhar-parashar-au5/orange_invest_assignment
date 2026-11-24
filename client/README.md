@@ -28,6 +28,15 @@ same site.
 in a production build, means same origin, so requests go to relative `/api/...`. Use that when the API
 and the client are served from one host.
 
+`VITE_REPO_URL` (default `https://github.com/prakhar-parashar-au5/orange_invest_assignment/blob/main/`)
+is where relative links on the Artifacts pages go. They are resolved from `docs/artifacts/`.
+
+The login form has an optional **Admin code** field. In production an admin account needs it; it's
+sent as `code` only when filled in.
+
+Artifacts render markdown with raw HTML off. Mermaid diagrams are drawn by a lazily loaded Mermaid
+(`securityLevel: 'strict'`); the Artifacts page and Mermaid are separate chunks, not in the main bundle.
+
 `client/.env.example` lists the only variable. Every `VITE_*` value ends up in the public JavaScript
 bundle, so nothing secret ever goes in the client.
 

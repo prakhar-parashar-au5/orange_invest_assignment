@@ -12,6 +12,7 @@ export function LoginPage() {
   const { status, login, error: bootError } = useAuth()
   const location = useLocation()
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -22,7 +23,7 @@ export function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      await login(email)
+      await login(email, code.trim())
     } catch (err) {
       setError(err.message)
       setSubmitting(false)
@@ -52,6 +53,19 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 data-testid="login-email"
                 required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="admin-code">
+                Admin code <span className="font-normal text-muted-foreground">(admins only, optional)</span>
+              </Label>
+              <Input
+                id="admin-code"
+                type="password"
+                autoComplete="off"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                data-testid="login-admin-code"
               />
             </div>
             {shownError && (
