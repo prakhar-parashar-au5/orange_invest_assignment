@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25 00:03 IST",
+  "generated_at": "2026-11-25 01:00 IST",
   "command": "npm run artifacts:build",
   "source": "server/db/schema.sql applied to orange_invest_test",
   "tables": [

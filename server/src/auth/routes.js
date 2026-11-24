@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { badRequest, unauthenticated } from '../http/errors.js';
 import { toIstIso } from '../util/time.js';
 import { setSessionCookie, clearSessionCookie, requireUser } from './session.js';
@@ -19,14 +18,6 @@ function parseEmail(body) {
   return email;
 }
 
-const digest = (s) => createHash('sha256').update(String(s)).digest();
-
-/** Constant time: both sides are hashed to 32 bytes first, so the length leaks nothing either. */
-export function codeMatches(given, expected) {
-  if (typeof given !== 'string' || typeof expected !== 'string' || expected.length === 0) return false;
-  return timingSafeEqual(digest(given), digest(expected));
-}
-
 const toUserJson = (row) => ({ id: row.id, email: row.email, role: row.role, created_at: toIstIso(row.created_at) });
 
 /**
@@ -42,9 +33,6 @@ export function authRouter({ config, db }) {
     // Race-safe upsert: two concurrent first logins for the same email both end with one row.
     await db.query('INSERT INTO users (email) VALUES (?) ON DUPLICATE KEY UPDATE id = id', [email]);
     const [rows] = await db.query('SELECT id, email, role, created_at FROM users WHERE email = ?', [email]);
-    if (rows[0].role === 'admin' && config.adminCodeRequired && !codeMatches(req.body?.code, config.adminLoginCode)) {
-      throw unauthenticated('Login failed');
-    }
 
     setSessionCookie(res, config, rows[0].id);
     res.json({ user: toUserJson(rows[0]) });

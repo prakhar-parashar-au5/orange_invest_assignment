@@ -12,7 +12,7 @@ const LOCAL_APP_USER = 'orange_app:orange_app_dev';
 // Dev-only. Production refuses to start without a real JWT_SECRET.
 const LOCAL_JWT_SECRET = 'orange-invest-local-dev-only-jwt-secret';
 
-const REQUIRED_IN_PRODUCTION = ['DATABASE_URL', 'JWT_SECRET', 'OPENAI_API_KEY', 'ADMIN_LOGIN_CODE'];
+const REQUIRED_IN_PRODUCTION = ['DATABASE_URL', 'JWT_SECRET', 'OPENAI_API_KEY'];
 
 /**
  * @param {Record<string, string | undefined>} env usually process.env
@@ -48,9 +48,5 @@ export function loadConfig(env = process.env) {
     openaiApiKey: env.OPENAI_API_KEY || null,
     openaiModel: env.OPENAI_MODEL || 'gpt-4.1-mini',
     logLevel: env.LOG_LEVEL === 'debug' ? 'debug' : 'info',
-    // Dummy email login means anyone could type an admin's email. In production an admin login also
-    // needs this code. Unset → admins can't log in at all (fail closed); normal users are unaffected.
-    adminCodeRequired: isProduction,
-    adminLoginCode: env.ADMIN_LOGIN_CODE || null,
   };
 }

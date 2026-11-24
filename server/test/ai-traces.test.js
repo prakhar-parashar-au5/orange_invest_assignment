@@ -148,19 +148,18 @@ describe('recording', () => {
 });
 
 describe('admin API', () => {
-  it('401 without login, 403 for a non-admin, 200 for an admin; /me returns role', async () => {
+  it('401 without login; reads are open to any logged-in user (BE-016); /me returns role', async () => {
     const plain = await loggedInAgent(ctx.app, 'not-admin');
     const admin = await adminAgent();
     const { default: request } = await import('supertest');
 
     const anon = await request(ctx.app).get('/api/admin/ai/summary');
-    const forbidden = await plain.agent.get('/api/admin/ai/traces');
+    const userRead = await plain.agent.get('/api/admin/ai/traces');
     const ok = await admin.get('/api/admin/ai/summary?window=7d');
     const me = await admin.get('/api/auth/me');
 
     expect(anon.status).toBe(401);
-    expect(forbidden.status).toBe(403);
-    expect(forbidden.body.error.code).toBe('FORBIDDEN');
+    expect(userRead.status).toBe(200);
     expect(ok.status).toBe(200);
     expect(ok.body.series).toHaveLength(7);
     expect(ok.body.traces.total).toBeGreaterThan(0);

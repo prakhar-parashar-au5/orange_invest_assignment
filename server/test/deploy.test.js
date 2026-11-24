@@ -15,7 +15,6 @@ const PROD_ENV = {
   DATABASE_URL: 'mysql://a:b@h:1/orange_invest_demo',
   JWT_SECRET: 's',
   OPENAI_API_KEY: 'k',
-  ADMIN_LOGIN_CODE: 'c',
 };
 
 describe('production config', () => {

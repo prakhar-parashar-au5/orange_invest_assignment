@@ -9,9 +9,7 @@ Prakhar does every step in this file. Commands are single lines; paste them one 
 
 ## 0. Before you start
 - Deploy from `main` with `feat/backend` and `feat/frontend` merged in. The repo root must contain `package.json`, `.nvmrc`, `server/` and `client/`.
-- Generate two secrets on your laptop and keep them in a password manager. Hex keeps them URL-safe:
-  - `openssl rand -hex 32` → **JWT_SECRET**
-  - `openssl rand -hex 12` → **ADMIN_CODE**. With dummy email login, anyone could type `admin@test.local`, so in production an admin login also needs this code.
+- Generate one secret on your laptop and keep it in a password manager: `openssl rand -hex 32` → **JWT_SECRET** (hex keeps it URL-safe).
 
 ## 1. Create the project and MySQL
 1. Railway dashboard → **New Project** → **Deploy from GitHub repo** → `orange_invest_assignment`, branch `main`. This creates the app service. Rename it `app`.
@@ -39,8 +37,8 @@ Prakhar does every step in this file. Commands are single lines; paste them one 
 | `JWT_SECRET` | `<JWT_SECRET>` | from step 0 |
 | `OPENAI_API_KEY` | your key | type it into the dashboard; it lives nowhere else |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | type it |
-| `ADMIN_LOGIN_CODE` | `<ADMIN_CODE>` | from step 0. Admins must enter it at login; without it no admin can log in |
 
+- **No admin code any more.** If `ADMIN_LOGIN_CODE` is still set in Railway, it's ignored; you can delete it.
 - Don't set `PORT` (Railway injects it), `CLIENT_ORIGIN` (it's one origin, so CORS stays off), or `CLIENT_DIST_DIR` (the default `client/dist` is right).
 - Optional cost guards, with these defaults: `CHAT_RATE_LIMIT=20` messages per `CHAT_RATE_WINDOW_SECONDS=600` per user, and `UPLOADS_PER_DAY=20` per user. Over the limit → 429 `RATE_LIMITED`.
 - **Variable edits are staged.** Nothing applies until you click **Deploy** on the banner at the top.
@@ -74,7 +72,7 @@ Run these in a plain terminal on your laptop. Don't set `NODE_ENV=production` th
 - [ ] Upload `server/test/fixtures/hdfc-basic.csv`: 201, 6 inserted, 2 rejected. Upload it again: 0 inserted.
 - [ ] Chat: "How much did I spend in October?" gives an answer with a ₹ amount.
 - [ ] Log in as `b@test.local`: none of a's uploads are visible.
-- [ ] Log in as `admin@test.local` **without** the admin code: refused. With the code: the admin AI pages show the chat turn from above.
+- [ ] Log in as `a@test.local`: the AI monitoring and evals pages show the chat turn from above (open to any logged-in user). Deleting a trace needs `admin@test.local`; anyone else gets 403.
 - [ ] Browser devtools → the `oi_session` cookie is `HttpOnly`, `Secure`, `SameSite=Lax`.
 
 ## 6b. Run the eval against production
@@ -92,7 +90,7 @@ This fills the admin **Evals** page on the live site. Run it from `server/` on y
 ## 7. Rollback
 - App: **Deployments** tab → the last good deployment → **Redeploy**. The schema is additive (`CREATE TABLE IF NOT EXISTS`, plus columns added when missing), so an older build runs against a newer schema.
 - Data: demo data is synthetic. To start over, in Railway's MySQL **Data** tab or any MySQL client: `DROP DATABASE orange_invest_demo;`, then redeploy (pre-deploy recreates it) and rerun step 5.
-- Secrets: change the variable, then **Deploy**. Rotating `ADMIN_LOGIN_CODE` takes effect on the next admin login. Rotating `JWT_SECRET` logs everyone out.
+- Secrets: change the variable, then **Deploy**. Rotating `JWT_SECRET` logs everyone out.
 
 ## 8. What can break
 | risk | what I checked | what I couldn't check |
@@ -106,7 +104,7 @@ This fills the admin **Evals** page on the live site. Run it from `server/` on y
 | Node version not available on Railway | pinned 22.23.1 in `.nvmrc` and `engines` | whether Railway's builder has that exact version (fallback: `22`) |
 | A seed runs on every deploy | seeds aren't in pre-deploy; `seed:demo` refuses anything not ending in `_demo` and does a dry run unless `--write` | |
 | Missing secrets | production startup fails and names every missing variable | |
-| Anyone logs in as admin (dummy auth) | in production an admin also needs `ADMIN_LOGIN_CODE`, compared in constant time; tested | brute force: there is no login rate limit yet, so use a long random code |
+| Anyone sees the AI dashboard (dummy auth) | by design: every logged-in user can read AI traces and evals (synthetic demo data); only deleting a trace needs `role=admin`, re-read from the DB; tested | admin by email is still guessable with dummy auth, so DELETE is the only privileged action |
 
 ## 9. Known traps
 - **Variable edits stay staged** until you click **Deploy**.

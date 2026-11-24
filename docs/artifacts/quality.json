@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25 00:03 IST",
+  "generated_at": "2026-11-25 01:00 IST",
   "command": "npm run artifacts:build",
   "tests": {
     "layers": [
@@ -10,55 +10,55 @@
         "tests": 184,
         "passed": 184,
         "failed": 0,
-        "test_time_ms": 110
+        "test_time_ms": 134
       },
       {
         "layer": "server integration (MySQL)",
         "command": "cd server && npx vitest run",
         "files": 17,
-        "tests": 259,
-        "passed": 259,
+        "tests": 261,
+        "passed": 261,
         "failed": 0,
-        "test_time_ms": 4573
+        "test_time_ms": 5048
       },
       {
         "layer": "client",
         "command": "cd client && npx vitest run",
-        "files": 7,
-        "tests": 57,
-        "passed": 57,
-        "failed": 0,
-        "test_time_ms": 1442
+        "files": 9,
+        "tests": 72,
+        "passed": 71,
+        "failed": 1,
+        "test_time_ms": 2376
       }
     ],
     "wall_ms": {
-      "server": 2247,
-      "client": 2009
+      "server": 2616,
+      "client": 2589
     }
   },
   "performance": {
     "user_transactions": 616,
-    "traces": 33,
+    "traces": 83,
     "results": [
       {
         "query": "spend_summary by category, this year",
         "runs": 50,
-        "p50_ms": 1.59,
-        "p95_ms": 3.7,
+        "p50_ms": 1.71,
+        "p95_ms": 2.42,
         "explain": [
           {
             "table": "transactions",
-            "type": "ref",
-            "key": "uq_txn_user_dedup",
-            "rows": 616
+            "type": "range",
+            "key": "idx_txn_user_date",
+            "rows": 488
           }
         ]
       },
       {
         "query": "list_transactions, last 30 days",
         "runs": 50,
-        "p50_ms": 0.9,
-        "p95_ms": 1.2,
+        "p50_ms": 0.96,
+        "p95_ms": 1.74,
         "explain": [
           {
             "table": "transactions",
@@ -71,22 +71,22 @@
       {
         "query": "top_merchants, this year",
         "runs": 50,
-        "p50_ms": 0.79,
-        "p95_ms": 0.9,
+        "p50_ms": 0.81,
+        "p95_ms": 1.11,
         "explain": [
           {
             "table": "transactions",
-            "type": "ref",
-            "key": "uq_txn_user_dedup",
-            "rows": 616
+            "type": "range",
+            "key": "idx_txn_user_date",
+            "rows": 488
           }
         ]
       },
       {
         "query": "uploads list (GET /api/uploads)",
         "runs": 50,
-        "p50_ms": 0.89,
-        "p95_ms": 1.47,
+        "p50_ms": 1,
+        "p95_ms": 2.38,
         "explain": [
           {
             "table": "uploads",
@@ -99,20 +99,20 @@
       {
         "query": "trace summary (GET /api/admin/ai/summary?window=7d)",
         "runs": 50,
-        "p50_ms": 3.27,
-        "p95_ms": 3.98,
+        "p50_ms": 3.54,
+        "p95_ms": 5.17,
         "explain": [
           {
             "table": "t",
             "type": "index",
             "key": "idx_trace_status_created",
-            "rows": 33
+            "rows": 83
           },
           {
             "table": "c",
             "type": "ALL",
             "key": null,
-            "rows": 30
+            "rows": 73
           },
           {
             "table": "r",
@@ -136,6 +136,18 @@
       "cases_passed": 0,
       "cases_failed": 0,
       "cases_blocked": 1
+    },
+    {
+      "id": 2,
+      "prompt_version": "v2",
+      "model": "gpt-4.1-mini",
+      "status": "FINISHED",
+      "label": "v2 local",
+      "started_at": "2026-11-25 00:43 IST",
+      "cases_total": 21,
+      "cases_passed": 20,
+      "cases_failed": 1,
+      "cases_blocked": 0
     }
   ],
   "request_flow": {

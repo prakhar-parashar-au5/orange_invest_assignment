@@ -82,7 +82,6 @@ All of them are optional locally. The names are listed in `server/.env.example`.
 | `DATABASE_URL` | local `orange_app` → `orange_invest_dev` (`_test` under `NODE_ENV=test`) | yes |
 | `JWT_SECRET` | a fixed dev string | yes |
 | `OPENAI_API_KEY` | none | yes |
-| `ADMIN_LOGIN_CODE` | none (ignored outside production) | yes: admin accounts must send it as `code` at login |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | |
 | `LOG_LEVEL` | `info` (`debug` adds agent traces) | |
 

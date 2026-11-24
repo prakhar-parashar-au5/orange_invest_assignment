@@ -43,7 +43,7 @@ Each card: what we chose, the options, why, and what it costs us.
 ### 6. Dummy email login
 - **Chose:** log in with an email only; a new email creates the user; a JWT in an httpOnly cookie ([server/src/auth/routes.js](../../server/src/auth/routes.js)).
 - **Why:** the spec said sign-up can be dummy; every query is still scoped by `user_id`.
-- **Cost:** anyone can type any email. On the public deploy, admin accounts also need an `ADMIN_LOGIN_CODE`.
+- **Cost:** anyone can type any email, including an admin's. So the AI monitoring and eval pages are **open to every logged-in user**: this is a toy demo on synthetic data, and reviewers should see them. The one destructive action, deleting a trace, stays admin-only (role re-read from the database). An earlier version also required an admin login code; it was removed to keep the deploy simple.
 
 ### 7. One Railway service, same origin
 - **Options:** client and API as two Railway services, or one.
@@ -68,4 +68,5 @@ Each card: what we chose, the options, why, and what it costs us.
 | MCP and OAuth | not needed for one app with dummy auth |
 | LLM-as-judge for answers | hard pass/fail gates against SQL are stricter; quality beyond them is a human review |
 | Trace retention jobs | demo-sized data |
+| Per-role access to AI traces | every logged-in user can read them in this demo; real data would need per-role or per-team access, and real auth first |
 | A separate SELECT-only database user for the AI | one `DATABASE_URL` keeps the deploy simple; the read-only session covers our fixed queries. Worth adding before any text-to-SQL (future work) |
