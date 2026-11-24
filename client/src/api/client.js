@@ -67,7 +67,8 @@ export async function request(path, { method = 'GET', body, query, signal } = {}
   if (!res.ok) {
     const e = data?.error
     if (e && typeof e.code === 'string') {
-      if (e.code === 'UNAUTHENTICATED' && path !== '/auth/me') onUnauthenticated?.()
+      // A 401 from login itself is "Login failed" (wrong admin code), not an expired session.
+      if (e.code === 'UNAUTHENTICATED' && path !== '/auth/me' && path !== '/auth/login') onUnauthenticated?.()
       throw new ApiError({ status: res.status, code: e.code, message: e.message || e.code })
     }
     throw new ApiError({

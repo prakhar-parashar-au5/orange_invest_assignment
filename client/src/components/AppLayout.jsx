@@ -24,6 +24,9 @@ export function AppLayout() {
             <NavLink to="/chat" className={navClass} data-testid="nav-chat">
               Chat
             </NavLink>
+            <NavLink to="/artifacts" className={navClass} data-testid="nav-artifacts">
+              Artifacts
+            </NavLink>
             {/* Convenience only. Admin pages still render the backend's 403 for non-admins. */}
             {user?.role === 'admin' && (
               <NavLink to="/admin/ai" className={navClass} data-testid="nav-admin">
